@@ -104,7 +104,7 @@ export const prefeiturasList: Prefeitura[] = [
         city: 'São Paulo',
         state: 'SP',
         cnpj: '46.395.000/0001-39',
-        status: 'active',
+        status: 'ATIVA',
         registrationDate: '2024-01-15',
         contactName: 'Maria Silva',
         contactEmail: 'maria.silva@prefeitura.sp.gov.br',
@@ -145,7 +145,7 @@ export const prefeiturasList: Prefeitura[] = [
         city: 'Rio de Janeiro',
         state: 'RJ',
         cnpj: '42.498.600/0001-70',
-        status: 'active',
+        status: 'ATIVA',
         registrationDate: '2024-02-10',
         contactName: 'Pedro Santos',
         contactEmail: 'pedro.santos@rio.rj.gov.br',
@@ -191,7 +191,7 @@ export const prefeiturasList: Prefeitura[] = [
         city: 'Curitiba',
         state: 'PR',
         cnpj: '76.416.940/0001-28',
-        status: 'active',
+        status: 'ATIVA',
         registrationDate: '2024-01-20',
         contactName: 'Carlos Oliveira',
         contactEmail: 'carlos.oliveira@curitiba.pr.gov.br',
@@ -210,7 +210,7 @@ export const prefeiturasList: Prefeitura[] = [
         city: 'Salvador',
         state: 'BA',
         cnpj: '13.927.801/0001-56',
-        status: 'inactive',
+        status: 'INATIVA',
         registrationDate: '2023-11-10',
         contactName: 'Juliana Ferreira',
         contactEmail: 'juliana.ferreira@salvador.ba.gov.br',
@@ -315,7 +315,7 @@ export const franqueadosList: Franqueado[] = [
         registrationDate: '2024-01-15',
         citiesRegistered: 12,
         loanAmount: 650000,
-        status: 'active',
+        status: 'ATIVA',
         masterId: '1'
     }, {
         id: '2',
@@ -327,7 +327,7 @@ export const franqueadosList: Franqueado[] = [
         registrationDate: '2024-02-10',
         citiesRegistered: 9,
         loanAmount: 480000,
-        status: 'active',
+        status: 'ATIVA',
         masterId: '1'
     }, {
         id: '3',
@@ -339,7 +339,7 @@ export const franqueadosList: Franqueado[] = [
         registrationDate: '2024-03-05',
         citiesRegistered: 7,
         loanAmount: 390000,
-        status: 'active',
+        status: 'ATIVA',
         masterId: '2'
     }
 ];
