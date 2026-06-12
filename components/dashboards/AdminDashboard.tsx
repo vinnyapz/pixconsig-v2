@@ -9,6 +9,7 @@ import { DollarSign, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { PendingActionsAlert } from '@/components/common/PendingActionsAlert';
+import { AlertasPrefeituras } from '@/components/common/AlertasPrefeituras';
 
 export function AdminDashboard() {
     const { userType } = useAuth();
@@ -40,6 +41,7 @@ export function AdminDashboard() {
             subtitle="Acompanhe os principais indicadores do sistema."
         >
             <PendingActionsAlert />
+            <AlertasPrefeituras />
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">

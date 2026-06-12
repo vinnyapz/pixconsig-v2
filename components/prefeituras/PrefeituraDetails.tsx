@@ -13,9 +13,11 @@ import {
   Upload,
   MessageSquare,
   FileCheck2,
+  Calendar,
 } from "lucide-react";
 import { WorkflowActions } from "./WorkflowActions";
 import { PrefeituraMessages } from "./PrefeituraMessages";
+import { FollowUpTab } from "./FollowUpTab";
 
 import { Prefeitura, Loan } from "@/types/prefeitura";
 import { PrefeituraFiles } from "./PrefeituraFiles";
@@ -54,7 +56,7 @@ export function PrefeituraDetails({
   onFilesChange,
   onStatusChange,
 }: PrefeituraDetailsProps) {
-  const [activeTab, setActiveTab] = useState<"info" | "loans" | "files" | "messages">(
+  const [activeTab, setActiveTab] = useState<"info" | "loans" | "files" | "messages" | "followups">(
     "info",
   );
   const isMaster = userType === "master";
@@ -161,6 +163,11 @@ export function PrefeituraDetails({
             label: "Mensagens",
             icon: <MessageSquare className="w-4 h-4" />,
           },
+          {
+            id: "followups",
+            label: "Follow-ups ✨",
+            icon: <Calendar className="w-4 h-4" />,
+          },
         ]}
         activeTab={activeTab}
         onTabChange={(tab) => setActiveTab(tab as any)}
@@ -209,6 +216,9 @@ export function PrefeituraDetails({
             prefeitura={displayPrefeitura}
             isMaster={isMaster}
           />
+        )}
+        {activeTab === "followups" && (
+          <FollowUpTab prefeituraId={displayPrefeitura.id} />
         )}
       </div>
 

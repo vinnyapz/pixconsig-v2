@@ -4,6 +4,7 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { DollarSign, TrendingUp, Users, Building2, Download } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/utils';
+import { ExportButton } from '@/components/common/ExportButton';
 
 interface ComissaoItem {
   prefeituraId: string;
@@ -118,7 +119,22 @@ export function ComissoesContent() {
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
               <h3 className="font-semibold text-gray-800">Detalhamento por Empréstimo</h3>
-              <span className="text-sm text-gray-400">{data?.items?.length || 0} registros</span>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-400">{data?.items?.length || 0} registros</span>
+                <ExportButton
+                  data={data?.items || []}
+                  filename={`comissoes-${months[month-1]}-${year}`}
+                  columns={[
+                    { key: 'prefeituraCity', label: 'Prefeitura' },
+                    { key: 'prefeituraState', label: 'Estado' },
+                    { key: 'loanType', label: 'Tipo' },
+                    { key: 'loanDate', label: 'Data' },
+                    { key: 'loanAmount', label: 'Valor Empréstimo' },
+                    { key: 'commissionRate', label: 'Taxa (%)' },
+                    { key: 'commissionAmount', label: 'Comissão' },
+                  ]}
+                />
+              </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
