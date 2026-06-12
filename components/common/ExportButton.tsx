@@ -7,9 +7,10 @@ interface ExportButtonProps {
   data: any[];
   filename: string;
   columns: { key: string; label: string }[];
+  alwaysShow?: boolean;
 }
 
-export function ExportButton({ data, filename, columns }: ExportButtonProps) {
+export function ExportButton({ data, filename, columns, alwaysShow }: ExportButtonProps) {
   const [open, setOpen] = useState(false);
 
   const exportCSV = () => {
@@ -67,7 +68,7 @@ export function ExportButton({ data, filename, columns }: ExportButtonProps) {
     setOpen(false);
   };
 
-  if (data.length === 0) return null;
+  if (data.length === 0 && !alwaysShow) return null;
 
   return (
     <div className="relative">

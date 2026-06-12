@@ -133,6 +133,7 @@ export function ComissoesContent() {
                     { key: 'commissionRate', label: 'Taxa (%)' },
                     { key: 'commissionAmount', label: 'Comissão' },
                   ]}
+                  alwaysShow
                 />
               </div>
             </div>
