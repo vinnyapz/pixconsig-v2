@@ -53,7 +53,7 @@ export function ComissoesContent() {
   return (
     <PageLayout title="Extrato de Comissões" subtitle="Acompanhe suas comissões por prefeitura e empréstimo">
       {/* Filtros */}
-      <div className="flex gap-3 mb-6">
+      <div className="flex gap-3 mb-6 items-center">
         <select
           value={month}
           onChange={e => setMonth(Number(e.target.value))}
@@ -70,6 +70,22 @@ export function ComissoesContent() {
         >
           {years.map(y => <option key={y} value={y}>{y}</option>)}
         </select>
+        <div className="ml-auto">
+          <ExportButton
+            data={data?.items || []}
+            filename={`comissoes-${months[month-1]}-${year}`}
+            columns={[
+              { key: 'prefeituraCity', label: 'Prefeitura' },
+              { key: 'prefeituraState', label: 'Estado' },
+              { key: 'loanType', label: 'Tipo' },
+              { key: 'loanDate', label: 'Data' },
+              { key: 'loanAmount', label: 'Valor Empréstimo' },
+              { key: 'commissionRate', label: 'Taxa (%)' },
+              { key: 'commissionAmount', label: 'Comissão' },
+            ]}
+            alwaysShow
+          />
+        </div>
       </div>
 
       {loading ? (
