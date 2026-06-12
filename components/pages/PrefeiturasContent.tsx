@@ -13,6 +13,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { Loan, Prefeitura } from "@/types/prefeitura";
 
+import { PrefeituraList } from "@/components/prefeituras/PrefeituraList";
 import { KanbanBoard } from "@/components/kanban/KanbanBoard";
 import { PrefeituraDetails } from "@/components/prefeituras/PrefeituraDetails";
 import { PrefeituraForm } from "@/components/prefeituras/PrefeituraForm";
