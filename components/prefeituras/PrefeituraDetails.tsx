@@ -103,7 +103,7 @@ export function PrefeituraDetails({
       isOpen={isOpen}
       onClose={onClose}
       title={`${displayPrefeitura.city} - ${displayPrefeitura.state}`}
-      subtitle={displayPrefeitura.cnpj}
+      subtitle={displayPrefeitura.cnpj ?? undefined}
       size="lg"
       headerActions={
         <div className="flex items-center gap-1">
