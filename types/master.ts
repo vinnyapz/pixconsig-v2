@@ -1,6 +1,7 @@
 export interface FranqueadoSummary {
     id: string;
     name: string;
+    email?: string;
     citiesRegistered: number;
     loanAmount: number;
     commissionRate: number;
