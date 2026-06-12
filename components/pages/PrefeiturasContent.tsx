@@ -13,7 +13,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { Loan, Prefeitura } from "@/types/prefeitura";
 
-import { PrefeituraList } from "@/components/prefeituras/PrefeituraList";
+import { KanbanBoard } from "@/components/kanban/KanbanBoard";
 import { PrefeituraDetails } from "@/components/prefeituras/PrefeituraDetails";
 import { PrefeituraForm } from "@/components/prefeituras/PrefeituraForm";
 import { ConsignadoForm } from "@/components/prefeituras/ConsignadoForm";
@@ -549,6 +549,7 @@ export function PrefeiturasContent() {
               {[
                 { id: "prefeituras", label: "Prefeituras" },
                 { id: "pending", label: "Em Andamento" },
+                { id: "kanban", label: "📋 Kanban" },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -645,6 +646,9 @@ export function PrefeiturasContent() {
             </div>
 
             {/* List */}
+            {activeTab === 'kanban' ? (
+              <KanbanBoard />
+            ) : (
             <PrefeituraList
               prefeituras={filteredPrefeituras}
               onManage={handleManage}
@@ -655,6 +659,7 @@ export function PrefeiturasContent() {
               duplicatesMap={duplicatesMap}
               myActionIds={myActionIds}
             />
+            )}
           </div>
 
           {/* Details Drawer */}

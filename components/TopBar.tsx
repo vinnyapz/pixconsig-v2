@@ -150,6 +150,8 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
                       label="Gestão de Prefeituras"
                     />
                     <NavButton path="/reports" label="Relatórios" />
+                    <NavButton path="/comissoes" label="Comissões" />
+                    <NavButton path="/metas" label="Metas" />
                   </>
                 )}
 
@@ -158,6 +160,8 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
                     <NavButton path="/dashboard" label="Dashboard" />
                     <NavButton path="/franqueados" label="Franqueados" />
                     <NavButton path="/prefeituras" label="Prefeituras" />
+                    <NavButton path="/comissoes" label="Comissões" />
+                    <NavButton path="/metas" label="Metas" />
                   </>
                 )}
 
@@ -165,6 +169,7 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
                   <>
                     <NavButton path="/dashboard" label="Dashboard" />
                     <NavButton path="/prefeituras" label="Minhas Prefeituras" />
+                    <NavButton path="/comissoes" label="Comissões" />
                   </>
                 )}
               </nav>
