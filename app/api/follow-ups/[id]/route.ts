@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getServerUser } from '@/lib/auth-server';
+import { getServerSession } from '@/lib/auth-server';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const user = await getServerUser(req);
+    const user = await getServerSession();
     if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
     const body = await req.json();
@@ -21,7 +21,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const user = await getServerUser(req);
+    const user = await getServerSession();
     if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
     await prisma.followUp.delete({ where: { id: params.id } });

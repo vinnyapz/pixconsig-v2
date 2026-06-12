@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getServerUser } from '@/lib/auth-server';
+import { getServerSession } from '@/lib/auth-server';
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await getServerUser(req);
+    const user = await getServerSession();
     if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
     const { searchParams } = new URL(req.url);
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getServerUser(req);
+    const user = await getServerSession();
     if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
     const body = await req.json();
