@@ -67,22 +67,29 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
     path,
     label,
     icon: Icon,
+    isNew,
   }: {
     path: string;
     label: string;
     icon?: React.ElementType;
+    isNew?: boolean;
   }) => (
     <Button
       onClick={() => handleNavigation(path)}
       variant="ghost"
       className={cn(
-        "rounded-none h-auto px-1 pt-1 pb-1 text-sm font-medium border-b-2 hover:bg-transparent transition-colors",
+        "rounded-none h-auto px-1 pt-1 pb-1 text-sm font-medium border-b-2 hover:bg-transparent transition-colors relative",
         isActive(path)
           ? "border-[#0066A1] text-gray-900"
           : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700",
       )}
     >
       {label}
+      {isNew && (
+        <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-green-100 text-green-700 border border-green-200 leading-none">
+          novo
+        </span>
+      )}
     </Button>
   );
 
@@ -90,10 +97,12 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
     path,
     label,
     icon: Icon,
+    isNew,
   }: {
     path: string;
     label: string;
     icon?: React.ElementType;
+    isNew?: boolean;
   }) => (
     <Button
       onClick={() => handleNavigation(path)}
@@ -107,6 +116,11 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
     >
       {Icon && <Icon className="mr-3 h-5 w-5" />}
       {label}
+      {isNew && (
+        <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-green-100 text-green-700 border border-green-200 leading-none">
+          novo
+        </span>
+      )}
     </Button>
   );
 
@@ -150,8 +164,8 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
                       label="Gestão de Prefeituras"
                     />
                     <NavButton path="/reports" label="Relatórios" />
-                    <NavButton path="/comissoes" label="Comissões" />
-                    <NavButton path="/metas" label="Metas" />
+                    <NavButton path="/comissoes" label="Comissões" isNew />
+                    <NavButton path="/metas" label="Metas" isNew />
                   </>
                 )}
 
@@ -160,8 +174,8 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
                     <NavButton path="/dashboard" label="Dashboard" />
                     <NavButton path="/franqueados" label="Franqueados" />
                     <NavButton path="/prefeituras" label="Prefeituras" />
-                    <NavButton path="/comissoes" label="Comissões" />
-                    <NavButton path="/metas" label="Metas" />
+                    <NavButton path="/comissoes" label="Comissões" isNew />
+                    <NavButton path="/metas" label="Metas" isNew />
                   </>
                 )}
 
@@ -169,7 +183,7 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
                   <>
                     <NavButton path="/dashboard" label="Dashboard" />
                     <NavButton path="/prefeituras" label="Minhas Prefeituras" />
-                    <NavButton path="/comissoes" label="Comissões" />
+                    <NavButton path="/comissoes" label="Comissões" isNew />
                   </>
                 )}
               </nav>
@@ -279,28 +293,26 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
                   label="Relatórios"
                   icon={FileText}
                 />
+                <MobileNavButton path="/comissoes" label="Comissões" icon={FileText} isNew />
+                <MobileNavButton path="/metas" label="Metas" icon={FileText} isNew />
               </>
             )}
 
             {userType === "master" && (
               <>
                 <MobileNavButton path="/dashboard" label="Dashboard" />
-                <MobileNavButton
-                  path="/franqueados"
-                  label="Franqueados"
-                  icon={Users}
-                />
+                <MobileNavButton path="/franqueados" label="Franqueados" icon={Users} />
                 <MobileNavButton path="/prefeituras" label="Prefeituras" />
+                <MobileNavButton path="/comissoes" label="Comissões" icon={FileText} isNew />
+                <MobileNavButton path="/metas" label="Metas" icon={FileText} isNew />
               </>
             )}
 
             {userType === "franqueado" && (
               <>
                 <MobileNavButton path="/dashboard" label="Dashboard" />
-                <MobileNavButton
-                  path="/prefeituras"
-                  label="Minhas Prefeituras"
-                />
+                <MobileNavButton path="/prefeituras" label="Minhas Prefeituras" />
+                <MobileNavButton path="/comissoes" label="Comissões" icon={FileText} isNew />
               </>
             )}
           </div>
