@@ -550,7 +550,7 @@ export function PrefeiturasContent() {
               {[
                 { id: "prefeituras", label: "Prefeituras" },
                 { id: "pending", label: "Em Andamento" },
-                { id: "kanban", label: "📋 Kanban" },
+                { id: "kanban", label: "Funil de Etapas" },
               ].map((tab) => (
                 <button
                   key={tab.id}
