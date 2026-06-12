@@ -8,7 +8,7 @@ export interface Franqueado {
     registrationDate?: string;
     citiesRegistered?: number;
     loanAmount?: number;
-    status?: 'active' | 'inactive';
+    status?: 'ATIVA' | 'INATIVA' | 'active' | 'inactive';
     masterId?: string;
     address?: string;
     city?: string;
