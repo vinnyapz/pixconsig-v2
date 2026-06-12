@@ -121,7 +121,6 @@ export function KanbanBoard() {
                     <div
                       key={p.id}
                       className="bg-white rounded-lg p-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => window.location.href = `/prefeituras/${p.id}`}
                     >
                       <div className="flex items-start gap-2">
                         <Building2 className="h-4 w-4 text-[#0066A1] mt-0.5 flex-shrink-0" />
