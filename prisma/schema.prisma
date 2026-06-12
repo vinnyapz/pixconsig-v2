@@ -1,0 +1,278 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(uuid())
+  name      String
+  email     String     @unique
+  password  String
+  type      UserType
+  status    UserStatus @default(ACTIVE)
+  parentId  String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  parent    User?      @relation("UserHierarchy", fields: [parentId], references: [id])
+  children  User[]     @relation("UserHierarchy")
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Prefeitura {
+  id           String           @id @default(uuid())
+  city         String
+  state        String
+  ibgeCode     String?          @map("ibge_code")
+  cnpj         String?          @unique
+  status       PrefeituraStatus @default(AGUARDANDO_ANALISE)
+  mayorName    String?
+  population   Int?
+  address      String?
+  zipCode      String?
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+  masterId     String?
+  franqueadoId String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  loans        Loan[]
+  files        PrefeituraFile[]
+  franqueado   Franqueado?      @relation("FranqueadoPrefeituras", fields: [franqueadoId], references: [id])
+  master       Master?          @relation("MasterPrefeituras", fields: [masterId], references: [id])
+  requests     PrefeituraRequest[]
+  rejectionReason  String?
+  messages         PrefeituraMessage[]
+  followUps        FollowUp[]
+
+  @@map("prefeituras")
+}
+
+model Loan {
+  id           String     @id @default(uuid())
+  amount       Float
+  type         LoanType
+  status       LoanStatus @default(PENDING)
+  date         DateTime
+  observations String?
+  prefeituraId String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  prefeitura   Prefeitura @relation(fields: [prefeituraId], references: [id])
+
+  @@map("loans")
+}
+
+model PrefeituraFile {
+  id           String     @id @default(uuid())
+  name         String
+  url          String
+  type         String
+  size         Int        @default(0)
+  uploadDate   DateTime   @default(now())
+  prefeituraId String
+  prefeitura   Prefeitura @relation(fields: [prefeituraId], references: [id])
+
+  @@map("prefeitura_files")
+}
+
+model PrefeituraMessage {
+  id              String     @id @default(uuid())
+  content         String
+  senderName      String
+  senderType      UserType
+  senderId        String
+  isSystemMessage Boolean    @default(false) @map("is_system_message")
+  prefeituraId    String
+  createdAt       DateTime   @default(now())
+  prefeitura      Prefeitura @relation(fields: [prefeituraId], references: [id], onDelete: Cascade)
+
+  @@map("prefeitura_messages")
+}
+
+model CommissionConfig {
+  id         String   @id @default(uuid())
+  userType   UserType
+  loanType   LoanType
+  percentage Float
+  updatedAt  DateTime @updatedAt
+
+  @@map("commission_configs")
+}
+
+model AppSetting {
+  key   String @id
+  value String
+
+  @@map("app_settings")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
+}
+
+model Master {
+  id             String              @id @default(uuid())
+  name           String
+  email          String              @unique
+  phone          String
+  document       String?
+  address        String?
+  city           String?
+  state          String?
+  zipCode        String?
+  commissionRate Float               @default(15)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  franqueados    Franqueado[]
+  prefeituras        Prefeitura[]        @relation("MasterPrefeituras")
+  prefeituraRequests PrefeituraRequest[]
+  metas              Meta[]
+
+  @@map("masters")
+}
+
+model Franqueado {
+  id             String              @id @default(uuid())
+  name           String
+  email          String              @unique
+  phone          String
+  document       String?
+  address        String?
+  city           String?
+  state          String?
+  zipCode        String?
+  commissionRate Float               @default(10)
+  masterId       String
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  master         Master              @relation(fields: [masterId], references: [id])
+  prefeituras        Prefeitura[]        @relation("FranqueadoPrefeituras")
+  prefeituraRequests PrefeituraRequest[]
+  metas              Meta[]
+
+  @@map("franqueados")
+}
+
+// Nova tabela: Metas mensais por franqueado/master
+model Meta {
+  id           String     @id @default(uuid())
+  month        Int        // 1-12
+  year         Int
+  targetCount  Int        // meta de prefeituras captadas
+  targetAmount Float      // meta de volume financeiro
+  masterId     String?
+  franqueadoId String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  master       Master?    @relation(fields: [masterId], references: [id])
+  franqueado   Franqueado? @relation(fields: [franqueadoId], references: [id])
+
+  @@map("metas")
+}
+
+// Nova tabela: Follow-ups / lembretes por prefeitura
+model FollowUp {
+  id           String       @id @default(uuid())
+  prefeituraId String
+  title        String
+  description  String?
+  dueDate      DateTime
+  done         Boolean      @default(false)
+  createdById  String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  prefeitura   Prefeitura   @relation(fields: [prefeituraId], references: [id], onDelete: Cascade)
+
+  @@map("follow_ups")
+}
+
+model PrefeituraRequest {
+  id            String        @id @default(uuid())
+  city          String
+  state         String
+  ibgeCode      String?       @map("ibge_code")
+  status        RequestStatus @default(PENDING)
+  requesterType UserType
+  masterId      String?
+  franqueadoId  String?
+  prefeituraId  String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  master        Master?       @relation(fields: [masterId], references: [id])
+  franqueado    Franqueado?   @relation(fields: [franqueadoId], references: [id])
+  prefeitura    Prefeitura?   @relation(fields: [prefeituraId], references: [id])
+
+  @@map("prefeitura_requests")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String           @map("user_id")
+  type      NotificationType
+  title     String
+  content   String
+  link      String
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now()) @map("created_at")
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum UserType {
+  ADMIN
+  MASTER
+  FRANQUEADO
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum PrefeituraStatus {
+  AGUARDANDO_ANALISE
+  AGUARDANDO_DECRETO
+  PROCESSO_EM_ANDAMENTO
+  ATIVA
+  INATIVA
+  REPROVADA
+}
+
+enum LoanType {
+  SERVIDOR
+  CONTRATADO
+}
+
+enum LoanStatus {
+  PENDING
+  PAID
+  REJECTED
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NotificationType {
+  SYSTEM
+  MESSAGE
+  STATUS_CHANGE
+  FOLLOWUP
+}

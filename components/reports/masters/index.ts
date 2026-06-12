@@ -1,0 +1,1 @@
+export { MastersRankingTable } from './MastersRankingTable';
