@@ -150,8 +150,8 @@ export function ComunicadosTab() {
                 body: JSON.stringify({
                     title, message, target,
                     estados: estadosSelecionados,
-                    franqueadoIds: target === 'FRANQUEADO' || (isMaster) ? pessoasSelecionadas : [],
-                    masterIds: target === 'MASTER' ? pessoasSelecionadas : [],
+                    franqueadoIds: (target === 'FRANQUEADO' || target === 'ALL' || isMaster) ? pessoasSelecionadas : [],
+                    masterIds: (target === 'MASTER' || target === 'ALL') ? pessoasSelecionadas : [],
                 }),
             });
             if (!res.ok) {

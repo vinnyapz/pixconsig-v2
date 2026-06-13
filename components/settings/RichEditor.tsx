@@ -28,30 +28,31 @@ export function RichEditor({ value, onChange, placeholder }: RichEditorProps) {
         onChange(editorRef.current?.innerHTML || '');
     };
 
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Converte imagem para base64 e insere inline — sem upload ao servidor
+    const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            const res = await fetch('/api/upload-imagem', { method: 'POST', body: formData });
-            if (!res.ok) {
-                const data = await res.json();
-                toast.error(data.error || 'Erro ao fazer upload');
-                return;
-            }
-            const { url } = await res.json();
-            exec('insertImage', url);
-        } catch {
-            toast.error('Erro ao fazer upload da imagem');
-        } finally {
-            e.target.value = '';
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            toast.error('Tipo não permitido. Use JPG, PNG, GIF ou WebP.');
+            return;
         }
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error('Imagem muito grande. Máximo 2MB.');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const base64 = ev.target?.result as string;
+            exec('insertImage', base64);
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
     };
 
-    const handleInsertLink = () => {
+    const handleInsertUrl = () => {
         const url = prompt('Cole a URL da imagem:');
         if (url) exec('insertImage', url);
     };
@@ -59,10 +60,6 @@ export function RichEditor({ value, onChange, placeholder }: RichEditorProps) {
     const handleInsertHyperlink = () => {
         const url = prompt('Cole o link:');
         if (url) exec('createLink', url);
-    };
-
-    const handleFontSize = (size: string) => {
-        exec('fontSize', size);
     };
 
     const tools = [
@@ -81,9 +78,9 @@ export function RichEditor({ value, onChange, placeholder }: RichEditorProps) {
         <div className="rounded-lg border bg-background overflow-hidden">
             {/* Toolbar */}
             <div className="flex flex-wrap items-center gap-0.5 p-2 border-b bg-muted/30">
-                {/* Tamanho da fonte */}
+                {/* Tamanho */}
                 <select
-                    onChange={e => handleFontSize(e.target.value)}
+                    onChange={e => { exec('fontSize', e.target.value); e.target.value = ''; }}
                     className="h-8 text-xs rounded border bg-background px-1 mr-1"
                     defaultValue=""
                 >
@@ -96,107 +93,68 @@ export function RichEditor({ value, onChange, placeholder }: RichEditorProps) {
 
                 <div className="w-px h-6 bg-border mx-1" />
 
-                {/* Negrito, itálico, sublinhado */}
                 {tools.map(t => (
-                    <Button
-                        key={t.cmd}
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        title={t.title}
-                        onMouseDown={e => { e.preventDefault(); exec(t.cmd); }}
-                    >
+                    <Button key={t.cmd} variant="ghost" size="sm" className="h-8 w-8 p-0" title={t.title}
+                        onMouseDown={e => { e.preventDefault(); exec(t.cmd); }}>
                         {t.icon}
                     </Button>
                 ))}
 
                 <div className="w-px h-6 bg-border mx-1" />
 
-                {/* Cores */}
                 <div className="flex items-center gap-1" title="Cor do texto">
                     <Type className="h-3 w-3 text-muted-foreground" />
-                    <input
-                        type="color"
-                        className="h-6 w-6 rounded cursor-pointer border-0 bg-transparent"
-                        title="Cor do texto"
-                        onChange={e => exec('foreColor', e.target.value)}
-                    />
+                    <input type="color" className="h-6 w-6 rounded cursor-pointer border-0 bg-transparent"
+                        onChange={e => exec('foreColor', e.target.value)} />
                 </div>
 
                 <div className="w-px h-6 bg-border mx-1" />
 
-                {/* Listas */}
-                <Button
-                    variant="ghost" size="sm" className="h-8 w-8 p-0" title="Lista com marcadores"
-                    onMouseDown={e => { e.preventDefault(); exec('insertUnorderedList'); }}
-                >
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Lista com marcadores"
+                    onMouseDown={e => { e.preventDefault(); exec('insertUnorderedList'); }}>
                     <List className="h-4 w-4" />
                 </Button>
-                <Button
-                    variant="ghost" size="sm" className="h-8 w-8 p-0" title="Lista numerada"
-                    onMouseDown={e => { e.preventDefault(); exec('insertOrderedList'); }}
-                >
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Lista numerada"
+                    onMouseDown={e => { e.preventDefault(); exec('insertOrderedList'); }}>
                     <ListOrdered className="h-4 w-4" />
                 </Button>
 
                 <div className="w-px h-6 bg-border mx-1" />
 
-                {/* Alinhamento */}
                 {alignTools.map(t => (
-                    <Button
-                        key={t.cmd}
-                        variant="ghost" size="sm" className="h-8 w-8 p-0" title={t.title}
-                        onMouseDown={e => { e.preventDefault(); exec(t.cmd); }}
-                    >
+                    <Button key={t.cmd} variant="ghost" size="sm" className="h-8 w-8 p-0" title={t.title}
+                        onMouseDown={e => { e.preventDefault(); exec(t.cmd); }}>
                         {t.icon}
                     </Button>
                 ))}
 
                 <div className="w-px h-6 bg-border mx-1" />
 
-                {/* Linha horizontal */}
-                <Button
-                    variant="ghost" size="sm" className="h-8 w-8 p-0" title="Linha divisória"
-                    onMouseDown={e => { e.preventDefault(); exec('insertHorizontalRule'); }}
-                >
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Linha divisória"
+                    onMouseDown={e => { e.preventDefault(); exec('insertHorizontalRule'); }}>
                     <Minus className="h-4 w-4" />
                 </Button>
 
-                {/* Link */}
-                <Button
-                    variant="ghost" size="sm" className="h-8 w-8 p-0" title="Inserir link"
-                    onMouseDown={e => { e.preventDefault(); handleInsertHyperlink(); }}
-                >
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Inserir link"
+                    onMouseDown={e => { e.preventDefault(); handleInsertHyperlink(); }}>
                     <Link className="h-4 w-4" />
                 </Button>
 
                 <div className="w-px h-6 bg-border mx-1" />
 
-                {/* Imagem upload */}
-                <Button
-                    variant="ghost" size="sm" className="h-8 px-2 gap-1 text-xs" title="Upload de imagem"
-                    onMouseDown={e => { e.preventDefault(); fileInputRef.current?.click(); }}
-                >
+                <Button variant="ghost" size="sm" className="h-8 px-2 gap-1 text-xs" title="Upload de imagem (embutida)"
+                    onMouseDown={e => { e.preventDefault(); fileInputRef.current?.click(); }}>
                     <Image className="h-4 w-4" />
                     Upload
                 </Button>
 
-                {/* Imagem por URL */}
-                <Button
-                    variant="ghost" size="sm" className="h-8 px-2 gap-1 text-xs" title="Inserir imagem por URL"
-                    onMouseDown={e => { e.preventDefault(); handleInsertLink(); }}
-                >
+                <Button variant="ghost" size="sm" className="h-8 px-2 gap-1 text-xs" title="Inserir imagem por URL"
+                    onMouseDown={e => { e.preventDefault(); handleInsertUrl(); }}>
                     <Image className="h-4 w-4" />
                     URL
                 </Button>
 
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleUpload}
-                />
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
             </div>
 
             {/* Área de edição */}
@@ -208,12 +166,6 @@ export function RichEditor({ value, onChange, placeholder }: RichEditorProps) {
                 className="min-h-[200px] p-4 text-sm focus:outline-none"
                 style={{ lineHeight: '1.7' }}
                 data-placeholder={placeholder}
-                dangerouslySetInnerHTML={value ? undefined : undefined}
-                onFocus={() => {
-                    if (!editorRef.current?.innerHTML && value) {
-                        editorRef.current!.innerHTML = value;
-                    }
-                }}
             />
 
             <style>{`

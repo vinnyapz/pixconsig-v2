@@ -76,10 +76,12 @@ export async function POST(request: Request) {
             }
 
         } else {
-            // Admin — busca conforme target e filtros de estado
+            // Admin
             const stateFilter = estados?.length > 0 ? { state: { in: estados } } : {};
+            const hasSpecificPeople = (franqueadoIds && franqueadoIds.length > 0) || (masterIds && masterIds.length > 0);
 
-            if (target === 'ALL' || target === 'ADMIN') {
+            // Admins — só quando target=ADMIN ou ALL sem seleção específica
+            if (target === 'ADMIN' || (target === 'ALL' && !hasSpecificPeople)) {
                 const admins = await prisma.user.findMany({
                     where: { type: { in: ['ADMIN', 'SUPERADMIN'] }, status: 'ACTIVE' },
                     select: { id: true, email: true, name: true },
@@ -87,9 +89,10 @@ export async function POST(request: Request) {
                 recipients.push(...admins);
             }
 
-            if (target === 'ALL' || target === 'MASTER') {
+            // Masters
+            if (target === 'MASTER' || (target === 'ALL' && (!hasSpecificPeople || (masterIds && masterIds.length > 0)))) {
                 const masterWhere: any = { ...stateFilter };
-                if (masterIds?.length > 0) masterWhere.id = { in: masterIds };
+                if (masterIds && masterIds.length > 0) masterWhere.id = { in: masterIds };
                 const masters = await prisma.master.findMany({
                     where: masterWhere,
                     select: { email: true, name: true },
@@ -103,9 +106,10 @@ export async function POST(request: Request) {
                 }
             }
 
-            if (target === 'ALL' || target === 'FRANQUEADO') {
+            // Franqueados
+            if (target === 'FRANQUEADO' || (target === 'ALL' && (!hasSpecificPeople || (franqueadoIds && franqueadoIds.length > 0)))) {
                 const franqueadoWhere: any = { ...stateFilter };
-                if (franqueadoIds?.length > 0) franqueadoWhere.id = { in: franqueadoIds };
+                if (franqueadoIds && franqueadoIds.length > 0) franqueadoWhere.id = { in: franqueadoIds };
                 const franqueados = await prisma.franqueado.findMany({
                     where: franqueadoWhere,
                     select: { email: true, name: true },
