@@ -124,8 +124,16 @@ export async function POST(request: Request) {
             }
         }
 
+        // Debug log
+        console.log('[COMUNICADOS] target:', target);
+        console.log('[COMUNICADOS] franqueadoIds:', franqueadoIds);
+        console.log('[COMUNICADOS] masterIds:', masterIds);
+        console.log('[COMUNICADOS] hasSpecificPeople:', hasSpecificPeople);
+        console.log('[COMUNICADOS] recipients antes de dedup:', recipients.length, recipients.map(r => r.email));
+
         // Remover duplicatas por id
         const unique = Array.from(new Map(recipients.map(u => [u.id, u])).values());
+        console.log('[COMUNICADOS] unique recipients:', unique.length);
 
         if (unique.length > 0) {
             // Notificação no sistema
