@@ -172,7 +172,7 @@ export const prefeiturasList: Prefeitura[] = [
         city: 'Belo Horizonte',
         state: 'MG',
         cnpj: '18.715.383/0001-40',
-        status: 'PENDING',
+        status: 'AGUARDANDO_ANALISE',
         registrationDate: '2024-03-05',
         contactName: 'Ana Costa',
         contactEmail: 'ana.costa@pbh.gov.br',
