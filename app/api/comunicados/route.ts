@@ -128,7 +128,6 @@ export async function POST(request: Request) {
         console.log('[COMUNICADOS] target:', target);
         console.log('[COMUNICADOS] franqueadoIds:', franqueadoIds);
         console.log('[COMUNICADOS] masterIds:', masterIds);
-        console.log('[COMUNICADOS] hasSpecificPeople:', hasSpecificPeople);
         console.log('[COMUNICADOS] recipients antes de dedup:', recipients.length, recipients.map(r => r.email));
 
         // Remover duplicatas por id
