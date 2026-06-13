@@ -1,3 +1,4 @@
+import { isAdminType } from '@/lib/auth-helpers';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession, getCurrentFranqueadoId, getCurrentMasterId } from '@/lib/auth-server';
@@ -12,7 +13,7 @@ export async function GET() {
 
         let count = 0;
 
-        if (session.type === 'admin') {
+        if (isAdminType(session.type)) {
             count = await prisma.prefeitura.count({
                 where: {
                     status: {

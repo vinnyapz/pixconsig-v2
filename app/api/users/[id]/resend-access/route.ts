@@ -1,3 +1,4 @@
+import { isAdminType } from '@/lib/auth-helpers';
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
@@ -14,7 +15,7 @@ export async function POST(
 
         // Verificar autenticação
         const session = await getServerSession();
-        if (!session || session.type !== 'admin') {
+        if (!session || !isAdminType(session.type)) {
             return NextResponse.json(
                 { error: 'Acesso não autorizado' },
                 { status: 403 }

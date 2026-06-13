@@ -1,3 +1,4 @@
+import { isAdminType } from '@/lib/auth-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from '@/lib/auth-server';
@@ -12,7 +13,7 @@ export async function GET(req: NextRequest) {
 
     // Admin pode ver preferências de qualquer usuário
     // Outros só veem as próprias
-    const targetUserId = (session.type === 'admin' && userId) ? userId : session.id;
+    const targetUserId = (isAdminType(session.type) && userId) ? userId : session.id;
 
     let prefs = await prisma.notificationPreference.findUnique({
       where: { userId: targetUserId },
@@ -39,7 +40,7 @@ export async function PUT(req: NextRequest) {
     const body = await req.json();
     const { userId, ...prefs } = body;
 
-    const targetUserId = (session.type === 'admin' && userId) ? userId : session.id;
+    const targetUserId = (isAdminType(session.type) && userId) ? userId : session.id;
 
     const updated = await prisma.notificationPreference.upsert({
       where: { userId: targetUserId },

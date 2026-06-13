@@ -70,7 +70,7 @@ function PrefsForm({ prefs, onChange }: { prefs: Prefs; onChange: (key: string, 
 
 export function NotificationsTab() {
   const { userType } = useAuth();
-  const isAdmin = userType === 'admin';
+  const isAdmin = userType === 'admin' || userType === 'superadmin';
 
   const [myPrefs, setMyPrefs] = useState<Prefs | null>(null);
   const [users, setUsers] = useState<UserWithPrefs[]>([]);

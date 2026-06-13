@@ -1,3 +1,4 @@
+import { isAdminType } from '@/lib/auth-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from '@/lib/auth-server';
@@ -5,7 +6,7 @@ import { getServerSession } from '@/lib/auth-server';
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession();
-    if (!session || session.type !== 'admin') {
+    if (!session || !isAdminType(session.type)) {
       return NextResponse.json({ error: 'Apenas admins' }, { status: 403 });
     }
 

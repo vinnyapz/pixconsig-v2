@@ -233,6 +233,7 @@ model Notification {
 }
 
 enum UserType {
+  SUPERADMIN
   ADMIN
   MASTER
   FRANQUEADO

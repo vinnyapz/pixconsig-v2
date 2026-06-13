@@ -11,20 +11,28 @@ const STATUS_LABELS: Record<string, string> = {
 
 type NotifType = 'onMessage' | 'onFile' | 'onStatusChange' | 'onNewRequest' | 'onFollowUp' | 'onPrefeituraAlert';
 
+/** Verifica se o usuário é SUPERADMIN (modo teste - sem notificações) */
+async function isSuperAdmin(userId: string): Promise<boolean> {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { type: true },
+    });
+    return user?.type === 'SUPERADMIN';
+}
+
 /** Filtra usuários que aceitam determinado tipo de notificação */
 async function filterUsersByPreference(userIds: string[], type: NotifType): Promise<string[]> {
-  const prefs = await prisma.notificationPreference.findMany({
-    where: { userId: { in: userIds } },
-    select: { userId: true, [type]: true },
-  });
+    const prefs = await prisma.notificationPreference.findMany({
+        where: { userId: { in: userIds } },
+        select: { userId: true, [type]: true },
+    });
 
-  const prefsMap = Object.fromEntries(prefs.map(p => [p.userId, p[type] as boolean]));
+    const prefsMap = Object.fromEntries(prefs.map(p => [p.userId, p[type] as boolean]));
 
-  return userIds.filter(id => {
-    // Se não tem preferência cadastrada, assume true (recebe por padrão)
-    if (!(id in prefsMap)) return true;
-    return prefsMap[id] === true;
-  });
+    return userIds.filter(id => {
+        if (!(id in prefsMap)) return true;
+        return prefsMap[id] === true;
+    });
 }
 
 /** Cria uma mensagem de sistema no chat da prefeitura */
@@ -41,13 +49,17 @@ export async function createSystemMessage(prefeituraId: string, content: string)
     });
 }
 
-/** Notifica todos os ADMINs ativos que aceitam o tipo */
+/** Notifica todos os ADMINs ativos (exceto SUPERADMINs) */
 export async function notifyAdmins(
     title: string,
     content: string,
     link: string,
-    type: NotifType = 'onMessage'
+    type: NotifType = 'onMessage',
+    senderUserId?: string
 ) {
+    // Se quem disparou é SUPERADMIN, não notifica ninguém
+    if (senderUserId && await isSuperAdmin(senderUserId)) return;
+
     const admins = await prisma.user.findMany({
         where: { type: 'ADMIN', status: 'ACTIVE' },
         select: { id: true },
@@ -70,14 +82,18 @@ export async function notifyAdmins(
     });
 }
 
-/** Notifica o Master/Franqueado dono da prefeitura que aceitam o tipo */
+/** Notifica o Master/Franqueado dono da prefeitura */
 export async function notifyPrefeituraOwner(
     prefeituraId: string,
     title: string,
     content: string,
     link: string,
-    type: NotifType = 'onMessage'
+    type: NotifType = 'onMessage',
+    senderUserId?: string
 ) {
+    // Se quem disparou é SUPERADMIN, não notifica ninguém
+    if (senderUserId && await isSuperAdmin(senderUserId)) return;
+
     const prefeitura = await prisma.prefeitura.findUnique({
         where: { id: prefeituraId },
         select: { masterId: true, franqueadoId: true },

@@ -27,6 +27,7 @@ interface TopBarProps {
 
 const getUserTypeLabel = (userType: UserType): string => {
   const labels = {
+    superadmin: "SuperAdmin",
     admin: "Admin",
     master: "Master",
     franqueado: "Franqueado",
@@ -155,7 +156,7 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
 
               {/* Desktop Navigation */}
               <nav className="hidden md:ml-8 md:flex md:space-x-8">
-                {userType === "admin" && (
+                {(userType === "admin" || userType === "superadmin") {userType === "admin" || userType === "superadmin" && ({userType === "admin" || userType === "superadmin" && ( (
                   <>
                     <NavButton path="/dashboard" label="Dashboard" />
                     <NavButton path="/masters" label="Masters" />
@@ -205,7 +206,7 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
                   </span>
                 </div>
               </div>
-              {userType === "admin" && (
+              {(userType === "admin" || userType === "superadmin") {userType === "admin" || userType === "superadmin" && ({userType === "admin" || userType === "superadmin" && ( (
                 <Button
                   onClick={() => handleNavigation("/settings")}
                   variant="ghost"
@@ -279,7 +280,7 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
 
         <div className="flex flex-col h-[calc(100%-64px)] justify-between">
           <div className="px-2 py-4 space-y-1 overflow-y-auto">
-            {userType === "admin" && (
+            {(userType === "admin" || userType === "superadmin") {userType === "admin" || userType === "superadmin" && ({userType === "admin" || userType === "superadmin" && ( (
               <>
                 <MobileNavButton path="/dashboard" label="Dashboard" />
                 <MobileNavButton path="/masters" label="Masters" icon={Users} />
@@ -334,7 +335,7 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
               </div>
             </div>
             <div className="flex gap-2">
-              {userType === "admin" && (
+              {(userType === "admin" || userType === "superadmin") {userType === "admin" || userType === "superadmin" && ({userType === "admin" || userType === "superadmin" && ( (
                 <Button
                   onClick={() => handleNavigation("/settings")}
                   variant="outline"

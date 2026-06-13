@@ -1,4 +1,4 @@
-export type UserType = 'admin' | 'master' | 'franqueado';
+export type UserType = 'superadmin' | 'admin' | 'master' | 'franqueado';
 
 export interface AuthUser {
     id: string;

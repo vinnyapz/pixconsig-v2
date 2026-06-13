@@ -166,7 +166,7 @@ export function SettingsContent() {
               Usuários
             </Button>
 
-            {userType === 'admin' && (
+            {userType === 'admin' || userType === 'superadmin' && (
               <Button
                 variant="ghost"
                 onClick={() => setActiveTab("goals")}

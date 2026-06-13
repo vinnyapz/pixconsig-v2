@@ -1,3 +1,4 @@
+import { isAdminType } from '@/lib/auth-helpers';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from '@/lib/auth-server';
@@ -76,7 +77,7 @@ export async function POST(
         }
 
         // Se quem enviou é ADMIN → notifica franqueado/master dono da prefeitura
-        if (session.type === 'admin') {
+        if (isAdminType(session.type)) {
             await notifyPrefeituraOwner(id, title, notifContent, link);
         }
 
