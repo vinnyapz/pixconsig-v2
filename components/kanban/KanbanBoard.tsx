@@ -239,6 +239,65 @@ function PrefeituraModal({ prefeitura, onClose }: { prefeitura: PrefeituraKanban
           )}
         </div>
       </div>
+
+      {/* Mini modal mensagem direta */}
+      {showMsgModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowMsgModal(false)} />
+          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-base">Mensagem Direta</h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Para o responsável por <strong>{prefeitura.city} - {prefeitura.state}</strong>
+                </p>
+              </div>
+              <button onClick={() => setShowMsgModal(false)} className="text-gray-400 hover:text-gray-600 p-1">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-gray-700">Assunto</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Pendência de documentação"
+                  value={msgSubject}
+                  onChange={e => setMsgSubject(e.target.value)}
+                  maxLength={80}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-gray-700">Mensagem</label>
+                <textarea
+                  placeholder="Detalhe o aviso, cobrança ou instrução..."
+                  value={msgBody}
+                  onChange={e => setMsgBody(e.target.value)}
+                  rows={5}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => setShowMsgModal(false)}
+                className="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSendDirectMessage}
+                disabled={sendingMsg || !msgSubject.trim() || !msgBody.trim()}
+                className="flex-1 px-4 py-2 text-sm bg-[#0066A1] text-white rounded-lg hover:bg-[#005591] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {sendingMsg ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {sendingMsg ? 'Enviando...' : 'Enviar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
