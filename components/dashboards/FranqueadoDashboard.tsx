@@ -12,6 +12,7 @@ import { PendingActionsAlert } from '@/components/common/PendingActionsAlert';
 
 export function FranqueadoDashboard() {
     const { userType } = useAuth();
+    const effectiveType = (userType === 'superadmin' ? 'admin' : userType) || 'franqueado';
     const { data, isLoading, error } = useDashboardData();
 
     if (isLoading) {
@@ -34,12 +35,10 @@ export function FranqueadoDashboard() {
         );
     }
 
-    // Cálculos de Metas baseados nos dados reais
     const currentPrefeituras = data.goals?.currentPrefeituras || 0;
     const goalPrefeituras = data.goals?.goalPrefeituras || 10;
     const currentMonth = data.goals?.currentMonth || 1;
     const totalMonths = data.goals?.totalMonths || 12;
-
     const remainingPrefeituras = Math.max(0, goalPrefeituras - currentPrefeituras);
     const remainingMonths = totalMonths - currentMonth;
     const averagePerMonth = remainingMonths > 0 ? remainingPrefeituras / remainingMonths : 0;
@@ -47,13 +46,8 @@ export function FranqueadoDashboard() {
     const isGoalAchieved = currentPrefeituras >= goalPrefeituras;
 
     return (
-        <PageLayout
-            title="Meu Desempenho"
-            subtitle="Acompanhe suas metas e resultados individuais."
-        >
+        <PageLayout title="Meu Desempenho" subtitle="Acompanhe suas metas e resultados individuais.">
             <PendingActionsAlert />
-
-            {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <StatCard
                     title={data.loanStats.title}
@@ -61,30 +55,25 @@ export function FranqueadoDashboard() {
                     trend={data.loanStats.trend}
                     description={data.loanStats.description}
                     icon={<DollarSign className="h-6 w-6" />}
-                    userType={userType || 'franqueado'}
+                    userType={effectiveType}
                 />
-
-                {/* Consolidated Prefeituras Card */}
                 <ConsolidatedPrefeiturasCard
                     total={data.prefeituraStats.total}
                     pending={data.prefeituraStats.pending}
                     active={data.prefeituraStats.active}
                     inactive={data.prefeituraStats.inactive}
-                    userType={userType || 'franqueado'}
+                    userType={effectiveType}
                     title="Minhas Prefeituras"
                 />
-
                 <StatCard
                     title={data.thirdCard.title}
                     value={data.thirdCard.value}
                     trend={data.thirdCard.trend}
                     description={data.thirdCard.description}
                     icon={<Target className="h-6 w-6" />}
-                    userType={userType || 'franqueado'}
+                    userType={effectiveType}
                 />
             </div>
-
-            {/* Metas e Conquistas */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-white overflow-hidden rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 h-full">
                     <div className="p-5">
@@ -93,30 +82,19 @@ export function FranqueadoDashboard() {
                                 <Target className="h-6 w-6" />
                             </div>
                             <div className="ml-5 w-0 flex-1">
-                                <p className="text-sm font-medium text-gray-500 truncate">
-                                    Metas de Prefeituras
-                                </p>
-                                <p className="text-2xl font-bold text-gray-900 mt-1">
-                                    {currentPrefeituras} / {goalPrefeituras}
-                                </p>
+                                <p className="text-sm font-medium text-gray-500 truncate">Metas de Prefeituras</p>
+                                <p className="text-2xl font-bold text-gray-900 mt-1">{currentPrefeituras} / {goalPrefeituras}</p>
                             </div>
                         </div>
-
                         <div className="mb-4">
                             <div className="flex justify-between text-xs text-gray-500 mb-2">
                                 <span>Progresso Anual</span>
-                                <span className={`font-semibold ${isGoalAchieved ? 'text-green-600' : 'text-[#0066A1]'}`}>
-                                    {progressPercentage.toFixed(0)}%
-                                </span>
+                                <span className={`font-semibold ${isGoalAchieved ? 'text-green-600' : 'text-[#0066A1]'}`}>{progressPercentage.toFixed(0)}%</span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                                <div
-                                    className={`h-3 rounded-full transition-all duration-500 ${isGoalAchieved ? 'bg-green-500' : 'bg-[#0066A1]'}`}
-                                    style={{ width: `${progressPercentage}%` }}>
-                                </div>
+                                <div className={`h-3 rounded-full transition-all duration-500 ${isGoalAchieved ? 'bg-green-500' : 'bg-[#0066A1]'}`} style={{ width: `${progressPercentage}%` }} />
                             </div>
                         </div>
-
                         <div className="grid grid-cols-2 gap-3">
                             <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
                                 <p className="text-xs text-gray-500 mb-1">Faltam</p>
@@ -145,15 +123,10 @@ export function FranqueadoDashboard() {
                         </div>
                     </div>
                 </div>
-
                 <div className="md:col-span-2 h-full">
-                    <AchievementTimeline
-                        currentAmount={data.totalAccumulatedLoans || 0}
-                        userType={userType || 'franqueado'}
-                    />
+                    <AchievementTimeline currentAmount={data.totalAccumulatedLoans || 0} userType={effectiveType} />
                 </div>
             </div>
-
             <div className="mb-8">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                     <div className="flex items-center justify-between mb-6">
@@ -166,7 +139,7 @@ export function FranqueadoDashboard() {
                             +12.5% vs ano anterior
                         </div>
                     </div>
-                    <LoanChart data={data.loanChartData} userType={userType || 'franqueado'} />
+                    <LoanChart data={data.loanChartData} userType={effectiveType} />
                 </div>
             </div>
         </PageLayout>

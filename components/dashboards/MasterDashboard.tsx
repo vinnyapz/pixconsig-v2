@@ -5,11 +5,7 @@ import { RankingCard } from '@/components/RankingCard';
 import { LoanChart } from '@/components/LoanChart';
 import { AchievementTimeline } from '@/components/AchievementTimeline';
 import { PageLayout } from '@/components/layout/PageLayout';
-import {
-    DollarSign,
-    Users,
-    Target
-} from 'lucide-react';
+import { DollarSign, Users, Target } from 'lucide-react';
 import { ConsolidatedPrefeiturasCard } from '@/components/ConsolidatedPrefeiturasCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardData } from '@/hooks/useDashboardData';
@@ -17,6 +13,7 @@ import { PendingActionsAlert } from '@/components/common/PendingActionsAlert';
 
 export function MasterDashboard() {
     const { userType } = useAuth();
+    const effectiveType = (userType === 'superadmin' ? 'admin' : userType) || 'master';
     const isMaster = userType === 'master';
     const { data, isLoading, error } = useDashboardData();
 
@@ -40,12 +37,10 @@ export function MasterDashboard() {
         );
     }
 
-    // Cálculos de Metas baseados nos dados reais
     const currentPrefeituras = data.goals?.currentPrefeituras || 0;
     const goalPrefeituras = data.goals?.goalPrefeituras || 100;
     const currentMonth = data.goals?.currentMonth || 1;
     const totalMonths = data.goals?.totalMonths || 12;
-
     const remainingPrefeituras = Math.max(0, goalPrefeituras - currentPrefeituras);
     const remainingMonths = totalMonths - currentMonth;
     const averagePerMonth = remainingMonths > 0 ? remainingPrefeituras / remainingMonths : 0;
@@ -76,41 +71,12 @@ export function MasterDashboard() {
     };
 
     return (
-        <PageLayout
-            title="Visão Geral"
-            subtitle="Acompanhe o desempenho da sua franquia e franqueados."
-        >
+        <PageLayout title="Visão Geral" subtitle="Acompanhe o desempenho da sua franquia e franqueados.">
             <PendingActionsAlert />
-
-            {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <StatCard
-                    title={data.loanStats.title}
-                    value={data.loanStats.value}
-                    trend={data.loanStats.trend}
-                    description={data.loanStats.description}
-                    icon={<DollarSign className="h-6 w-6" />}
-                    userType={userType || 'master'}
-                />
-
-                {/* Consolidated Prefeituras Card */}
-                <ConsolidatedPrefeiturasCard
-                    total={data.prefeituraStats.total}
-                    pending={data.prefeituraStats.pending}
-                    active={data.prefeituraStats.active}
-                    inactive={data.prefeituraStats.inactive}
-                    userType="master"
-                    title="Total Prefeituras"
-                />
-
-                <StatCard
-                    title={data.thirdCard.title}
-                    value={data.thirdCard.value}
-                    icon={<Users className="h-6 w-6" />}
-                    description={data.thirdCard.description}
-                    userType={userType || 'master'}
-                />
-
+                <StatCard title={data.loanStats.title} value={data.loanStats.value} trend={data.loanStats.trend} description={data.loanStats.description} icon={<DollarSign className="h-6 w-6" />} userType={effectiveType} />
+                <ConsolidatedPrefeiturasCard total={data.prefeituraStats.total} pending={data.prefeituraStats.pending} active={data.prefeituraStats.active} inactive={data.prefeituraStats.inactive} userType="master" title="Total Prefeituras" />
+                <StatCard title={data.thirdCard.title} value={data.thirdCard.value} icon={<Users className="h-6 w-6" />} description={data.thirdCard.description} userType={effectiveType} />
                 <div className={`overflow-hidden rounded-xl border ${styles.card}`}>
                     <div className="p-5">
                         <div className="flex items-center mb-4">
@@ -118,32 +84,19 @@ export function MasterDashboard() {
                                 <Target className={`h-6 w-6 ${styles.statsIcon}`} />
                             </div>
                             <div className="ml-5 w-0 flex-1">
-                                <p className={`text-sm font-medium truncate ${styles.textSecondary}`}>
-                                    Metas de Prefeituras
-                                </p>
-                                <p className={`text-2xl font-bold mt-1 ${styles.textPrimary}`}>
-                                    {currentPrefeituras} / {goalPrefeituras}
-                                </p>
+                                <p className={`text-sm font-medium truncate ${styles.textSecondary}`}>Metas de Prefeituras</p>
+                                <p className={`text-2xl font-bold mt-1 ${styles.textPrimary}`}>{currentPrefeituras} / {goalPrefeituras}</p>
                             </div>
                         </div>
-
-                        {/* Progress Bar */}
                         <div className="mb-4">
                             <div className={`flex justify-between text-xs mb-2 ${styles.textSecondary}`}>
                                 <span>Progresso Anual</span>
-                                <span className={`font-semibold ${isMaster ? 'text-[#00D9FF]' : 'text-[#0066A1]'}`}>
-                                    {progressPercentage.toFixed(0)}%
-                                </span>
+                                <span className={`font-semibold ${isMaster ? 'text-[#00D9FF]' : 'text-[#0066A1]'}`}>{progressPercentage.toFixed(0)}%</span>
                             </div>
                             <div className={`w-full rounded-full h-3 overflow-hidden ${styles.progressBg}`}>
-                                <div
-                                    className={`h-3 rounded-full transition-all duration-500 ${styles.progressFill}`}
-                                    style={{ width: `${progressPercentage}%` }}>
-                                </div>
+                                <div className={`h-3 rounded-full transition-all duration-500 ${styles.progressFill}`} style={{ width: `${progressPercentage}%` }} />
                             </div>
                         </div>
-
-                        {/* Stats Grid */}
                         <div className="grid grid-cols-2 gap-3">
                             <div className={`rounded-lg p-3 border ${styles.badgeBg}`}>
                                 <p className={`text-xs mb-1 ${styles.textSecondary}`}>Faltam</p>
@@ -157,14 +110,11 @@ export function MasterDashboard() {
                             </div>
                         </div>
                     </div>
-
                     <div className={styles.footer}>
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className={`text-xs mb-1 ${styles.textSecondary}`}>Média necessária/mês</p>
-                                <p className={`text-2xl font-bold ${isMaster ? 'text-[#00D9FF]' : 'text-[#0066A1]'}`}>
-                                    {averagePerMonth.toFixed(1)}
-                                </p>
+                                <p className={`text-2xl font-bold ${isMaster ? 'text-[#00D9FF]' : 'text-[#0066A1]'}`}>{averagePerMonth.toFixed(1)}</p>
                             </div>
                             <div className="text-right">
                                 <p className={`text-xs mb-1 ${styles.textSecondary}`}>Para atingir</p>
@@ -173,39 +123,21 @@ export function MasterDashboard() {
                         </div>
                     </div>
                 </div>
-
                 <div className={`md:col-span-2 rounded-xl border overflow-hidden ${styles.card}`}>
-                    <AchievementTimeline
-                        currentAmount={data.totalAccumulatedLoans || 0}
-                        userType={userType || 'master'}
-                    />
+                    <AchievementTimeline currentAmount={data.totalAccumulatedLoans || 0} userType={effectiveType} />
                 </div>
             </div>
-
-            {/* Loan Chart */}
             <div className="mb-8">
                 <div className={`rounded-xl border overflow-hidden ${styles.card}`}>
-                    <LoanChart data={data.loanChartData} userType={userType || 'master'} />
+                    <LoanChart data={data.loanChartData} userType={effectiveType} />
                 </div>
             </div>
-
-            {/* Rankings */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className={`rounded-xl border overflow-hidden ${styles.card}`}>
-                    <RankingCard
-                        title="Ranking de Consignados por Franqueado"
-                        items={data.rankings?.loanRanking || []}
-                        type="money"
-                        userType={userType || 'master'}
-                    />
+                    <RankingCard title="Ranking de Consignados por Franqueado" items={data.rankings?.loanRanking || []} type="money" userType={effectiveType} />
                 </div>
                 <div className={`rounded-xl border overflow-hidden ${styles.card}`}>
-                    <RankingCard
-                        title="Ranking de Cadastro de Prefeituras por Franqueado"
-                        items={data.rankings?.cityRanking || []}
-                        type="count"
-                        userType={userType || 'master'}
-                    />
+                    <RankingCard title="Ranking de Cadastro de Prefeituras por Franqueado" items={data.rankings?.cityRanking || []} type="count" userType={effectiveType} />
                 </div>
             </div>
         </PageLayout>
