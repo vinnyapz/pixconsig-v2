@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { Send, Megaphone, Loader2, Users, Clock, Filter, X } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { Send, Megaphone, Loader2, Users, Clock, Filter, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,10 +18,10 @@ interface Comunicado {
     totalSent: number;
 }
 
-interface Franqueado {
+interface Person {
     id: string;
     name: string;
-    state: string;
+    state: string | null;
     email: string;
 }
 
@@ -47,6 +47,7 @@ function targetLabel(target: string) {
 export function ComunicadosTab() {
     const { userType } = useAuth();
     const isMaster = userType === 'master';
+    const isAdmin = userType === 'admin' || userType === 'superadmin';
 
     const [title, setTitle] = useState('');
     const [message, setMessage] = useState('');
@@ -58,25 +59,29 @@ export function ComunicadosTab() {
     // Filtros
     const [estadosDisponiveis, setEstadosDisponiveis] = useState<string[]>([]);
     const [estadosSelecionados, setEstadosSelecionados] = useState<string[]>([]);
-    const [franqueadosDisponiveis, setFranqueadosDisponiveis] = useState<Franqueado[]>([]);
-    const [franqueadosSelecionados, setFranqueadosSelecionados] = useState<string[]>([]);
-    const [loadingFiltros, setLoadingFiltros] = useState(true);
+    const [franqueados, setFranqueados] = useState<Person[]>([]);
+    const [masters, setMasters] = useState<Person[]>([]);
+    const [pessoasSelecionadas, setPessoasSelecionadas] = useState<string[]>([]);
+    const [loadingFiltros, setLoadingFiltros] = useState(false);
     const [mostrarFiltros, setMostrarFiltros] = useState(false);
+    const [searchPessoa, setSearchPessoa] = useState('');
 
-    const fetchFiltros = async () => {
+    const fetchFiltros = useCallback(async (currentTarget: string) => {
+        setLoadingFiltros(true);
         try {
-            const res = await fetch('/api/comunicados/filtros');
+            const res = await fetch(`/api/comunicados/filtros?target=${currentTarget}`);
             if (res.ok) {
                 const data = await res.json();
                 setEstadosDisponiveis(data.estados || []);
-                setFranqueadosDisponiveis(data.franqueados || []);
+                setFranqueados(data.franqueados || []);
+                setMasters(data.masters || []);
             }
         } catch {
             console.error('Erro ao carregar filtros');
         } finally {
             setLoadingFiltros(false);
         }
-    };
+    }, []);
 
     const fetchHistorico = async () => {
         try {
@@ -90,9 +95,31 @@ export function ComunicadosTab() {
     };
 
     useEffect(() => {
-        fetchFiltros();
+        fetchFiltros(target);
         fetchHistorico();
     }, []);
+
+    // Recarregar filtros quando target muda
+    const handleTargetChange = (newTarget: string) => {
+        setTarget(newTarget);
+        setEstadosSelecionados([]);
+        setPessoasSelecionadas([]);
+        setSearchPessoa('');
+        fetchFiltros(newTarget);
+    };
+
+    // Lista de pessoas conforme target
+    const listaPessoas = target === 'MASTER' ? masters : franqueados;
+    const listaFiltrada = listaPessoas.filter(p =>
+        p.name.toLowerCase().includes(searchPessoa.toLowerCase()) ||
+        (p.state || '').toLowerCase().includes(searchPessoa.toLowerCase())
+    );
+
+    const togglePessoa = (id: string) => {
+        setPessoasSelecionadas(prev =>
+            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+        );
+    };
 
     const toggleEstado = (uf: string) => {
         setEstadosSelecionados(prev =>
@@ -110,43 +137,33 @@ export function ComunicadosTab() {
         }
     };
 
-    const toggleFranqueado = (id: string) => {
-        setFranqueadosSelecionados(prev =>
-            prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
-        );
-    };
-
     const handleSend = async () => {
         if (!title.trim() || !message.trim() || message === '<br>') {
             toast.error('Preencha o título e a mensagem');
             return;
         }
-
         setSending(true);
         try {
             const res = await fetch('/api/comunicados', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    title,
-                    message,
-                    target,
+                    title, message, target,
                     estados: estadosSelecionados,
-                    franqueadoIds: franqueadosSelecionados,
+                    franqueadoIds: target === 'FRANQUEADO' || (isMaster) ? pessoasSelecionadas : [],
+                    masterIds: target === 'MASTER' ? pessoasSelecionadas : [],
                 }),
             });
-
             if (!res.ok) {
                 const data = await res.json();
                 throw new Error(data.error || 'Erro ao enviar');
             }
-
             const data = await res.json();
             toast.success(`Comunicado enviado para ${data.totalSent} usuário(s)!`);
             setTitle('');
             setMessage('');
             setEstadosSelecionados([]);
-            setFranqueadosSelecionados([]);
+            setPessoasSelecionadas([]);
             setMostrarFiltros(false);
             fetchHistorico();
         } catch (e: any) {
@@ -156,7 +173,9 @@ export function ComunicadosTab() {
         }
     };
 
-    const totalFiltros = estadosSelecionados.length + franqueadosSelecionados.length;
+    const showListaPessoas = (target === 'FRANQUEADO' || target === 'MASTER' || isMaster) && listaPessoas.length > 0;
+    const showFiltroEstado = estadosDisponiveis.length > 0 && target !== 'ADMIN';
+    const totalSelecionados = pessoasSelecionadas.length + estadosSelecionados.length;
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -168,14 +187,14 @@ export function ComunicadosTab() {
                 <div className="p-6 space-y-5">
 
                     {/* Destinatários — só Admin vê */}
-                    {!isMaster && (
+                    {isAdmin && (
                         <div className="space-y-2">
                             <Label>Destinatários</Label>
                             <div className="flex flex-wrap gap-2">
                                 {TARGET_OPTIONS.map(opt => (
                                     <button
                                         key={opt.value}
-                                        onClick={() => { setTarget(opt.value); setEstadosSelecionados([]); }}
+                                        onClick={() => handleTargetChange(opt.value)}
                                         className={`px-4 py-2 rounded-full text-sm font-medium border-2 transition-all ${
                                             target === opt.value
                                                 ? 'border-primary bg-primary/10 text-primary'
@@ -189,8 +208,8 @@ export function ComunicadosTab() {
                         </div>
                     )}
 
-                    {/* Botão de filtros */}
-                    {(target === 'MASTER' || target === 'FRANQUEADO' || isMaster) && (
+                    {/* Botão filtros */}
+                    {(showListaPessoas || showFiltroEstado) && (
                         <div>
                             <button
                                 onClick={() => setMostrarFiltros(f => !f)}
@@ -198,65 +217,101 @@ export function ComunicadosTab() {
                             >
                                 <Filter className="h-4 w-4" />
                                 {mostrarFiltros ? 'Ocultar filtros' : 'Filtrar destinatários'}
-                                {totalFiltros > 0 && (
+                                {totalSelecionados > 0 && (
                                     <span className="bg-primary text-white text-xs rounded-full px-2 py-0.5">
-                                        {totalFiltros}
+                                        {totalSelecionados}
                                     </span>
                                 )}
                             </button>
 
                             {mostrarFiltros && (
-                                <div className="mt-3 p-4 rounded-lg border bg-muted/20 space-y-4">
+                                <div className="mt-3 p-4 rounded-lg border bg-muted/20 space-y-5">
 
-                                    {/* Filtro por franqueado (só master) */}
-                                    {isMaster && (
+                                    {/* Lista de pessoas (franqueados ou masters) */}
+                                    {showListaPessoas && (
                                         <div className="space-y-2">
                                             <div className="flex items-center justify-between">
-                                                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Selecionar Franqueados</Label>
+                                                <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                                                    {isMaster || target === 'FRANQUEADO' ? 'Selecionar Franqueados' : 'Selecionar Masters'}
+                                                </Label>
                                                 <button
                                                     className="text-xs text-primary hover:underline"
-                                                    onClick={() => setFranqueadosSelecionados(
-                                                        franqueadosSelecionados.length === franqueadosDisponiveis.length
+                                                    onClick={() => setPessoasSelecionadas(
+                                                        pessoasSelecionadas.length === listaPessoas.length
                                                             ? []
-                                                            : franqueadosDisponiveis.map(f => f.id)
+                                                            : listaPessoas.map(p => p.id)
                                                     )}
                                                 >
-                                                    {franqueadosSelecionados.length === franqueadosDisponiveis.length ? 'Desmarcar todos' : 'Selecionar todos'}
+                                                    {pessoasSelecionadas.length === listaPessoas.length ? 'Desmarcar todos' : 'Selecionar todos'}
                                                 </button>
                                             </div>
+
+                                            {/* Busca */}
+                                            <div className="relative">
+                                                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                                                <Input
+                                                    placeholder="Buscar por nome ou estado..."
+                                                    value={searchPessoa}
+                                                    onChange={e => setSearchPessoa(e.target.value)}
+                                                    className="pl-8 h-8 text-xs"
+                                                />
+                                            </div>
+
                                             {loadingFiltros ? (
-                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                <div className="flex justify-center py-3">
+                                                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                                </div>
                                             ) : (
-                                                <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
-                                                    {franqueadosDisponiveis.map(f => (
+                                                <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto pr-1">
+                                                    {listaFiltrada.length === 0 ? (
+                                                        <p className="text-xs text-muted-foreground py-2">Nenhum resultado encontrado.</p>
+                                                    ) : listaFiltrada.map(p => (
                                                         <button
-                                                            key={f.id}
-                                                            onClick={() => toggleFranqueado(f.id)}
-                                                            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                                                                franqueadosSelecionados.includes(f.id)
+                                                            key={p.id}
+                                                            onClick={() => togglePessoa(p.id)}
+                                                            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5 ${
+                                                                pessoasSelecionadas.includes(p.id)
                                                                     ? 'border-primary bg-primary/10 text-primary'
                                                                     : 'border-border bg-background text-muted-foreground hover:bg-muted'
                                                             }`}
                                                         >
-                                                            {f.name}
-                                                            {f.state && <span className="ml-1 opacity-60">({f.state})</span>}
+                                                            {p.name}
+                                                            {p.state && (
+                                                                <span className={`text-[10px] px-1 rounded ${
+                                                                    pessoasSelecionadas.includes(p.id) ? 'bg-primary/20' : 'bg-muted'
+                                                                }`}>
+                                                                    {p.state}
+                                                                </span>
+                                                            )}
                                                         </button>
                                                     ))}
                                                 </div>
                                             )}
-                                            {franqueadosSelecionados.length === 0 && (
-                                                <p className="text-xs text-muted-foreground">Nenhum selecionado = envia para todos os seus franqueados</p>
-                                            )}
+                                            <p className="text-xs text-muted-foreground">
+                                                {pessoasSelecionadas.length === 0
+                                                    ? 'Nenhum selecionado = envia para todos'
+                                                    : `${pessoasSelecionadas.length} selecionado(s)`}
+                                            </p>
                                         </div>
                                     )}
 
                                     {/* Filtro por estado */}
-                                    {estadosDisponiveis.length > 0 && (
+                                    {showFiltroEstado && (
                                         <div className="space-y-2">
-                                            <Label className="text-xs uppercase tracking-wide text-muted-foreground">Filtrar por Estado</Label>
+                                            <div className="flex items-center justify-between">
+                                                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Filtrar por Estado</Label>
+                                                {estadosSelecionados.length > 0 && (
+                                                    <button
+                                                        onClick={() => setEstadosSelecionados([])}
+                                                        className="text-xs text-red-500 hover:underline flex items-center gap-1"
+                                                    >
+                                                        <X className="h-3 w-3" /> Limpar
+                                                    </button>
+                                                )}
+                                            </div>
 
-                                            {/* Botões de região */}
-                                            <div className="flex flex-wrap gap-1 mb-2">
+                                            {/* Regiões */}
+                                            <div className="flex flex-wrap gap-1 mb-1">
                                                 {Object.entries(REGIOES).map(([regiao, ufs]) => {
                                                     const disponiveis = ufs.filter(e => estadosDisponiveis.includes(e));
                                                     if (disponiveis.length === 0) return null;
@@ -275,17 +330,9 @@ export function ComunicadosTab() {
                                                         </button>
                                                     );
                                                 })}
-                                                {estadosSelecionados.length > 0 && (
-                                                    <button
-                                                        onClick={() => setEstadosSelecionados([])}
-                                                        className="px-2 py-1 rounded text-xs border border-red-200 text-red-500 hover:bg-red-50 flex items-center gap-1"
-                                                    >
-                                                        <X className="h-3 w-3" /> Limpar
-                                                    </button>
-                                                )}
                                             </div>
 
-                                            {/* UFs individuais */}
+                                            {/* UFs */}
                                             <div className="flex flex-wrap gap-1.5">
                                                 {estadosDisponiveis.map(uf => (
                                                     <button
@@ -301,9 +348,9 @@ export function ComunicadosTab() {
                                                     </button>
                                                 ))}
                                             </div>
-                                            {estadosSelecionados.length === 0 && (
-                                                <p className="text-xs text-muted-foreground">Nenhum estado selecionado = envia para todos os estados</p>
-                                            )}
+                                            <p className="text-xs text-muted-foreground">
+                                                {estadosSelecionados.length === 0 ? 'Nenhum estado = todos os estados' : `${estadosSelecionados.length} estado(s) selecionado(s)`}
+                                            </p>
                                         </div>
                                     )}
                                 </div>
@@ -311,16 +358,16 @@ export function ComunicadosTab() {
                         </div>
                     )}
 
-                    {/* Resumo dos filtros ativos */}
-                    {(estadosSelecionados.length > 0 || franqueadosSelecionados.length > 0) && (
+                    {/* Tags dos selecionados */}
+                    {(pessoasSelecionadas.length > 0 || estadosSelecionados.length > 0) && (
                         <div className="flex flex-wrap gap-1.5 p-3 bg-primary/5 rounded-lg border border-primary/20">
                             <span className="text-xs text-primary font-medium w-full mb-1">Enviando para:</span>
-                            {franqueadosSelecionados.map(id => {
-                                const f = franqueadosDisponiveis.find(x => x.id === id);
-                                return f ? (
+                            {pessoasSelecionadas.map(id => {
+                                const p = listaPessoas.find(x => x.id === id);
+                                return p ? (
                                     <span key={id} className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
-                                        {f.name}
-                                        <button onClick={() => toggleFranqueado(id)}><X className="h-3 w-3" /></button>
+                                        {p.name}{p.state ? ` (${p.state})` : ''}
+                                        <button onClick={() => togglePessoa(id)}><X className="h-3 w-3" /></button>
                                     </span>
                                 ) : null;
                             })}

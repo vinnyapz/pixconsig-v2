@@ -36,7 +36,7 @@ export async function POST(request: Request) {
         const isMaster = session.type === 'master';
         if (!isAdmin && !isMaster) return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 403 });
 
-        const { title, message, target, estados, franqueadoIds } = await request.json();
+        const { title, message, target, estados, franqueadoIds, masterIds } = await request.json();
 
         if (!title || !message || !target) {
             return NextResponse.json({ error: 'Título, mensagem e destinatário são obrigatórios' }, { status: 400 });
@@ -88,8 +88,10 @@ export async function POST(request: Request) {
             }
 
             if (target === 'ALL' || target === 'MASTER') {
+                const masterWhere: any = { ...stateFilter };
+                if (masterIds?.length > 0) masterWhere.id = { in: masterIds };
                 const masters = await prisma.master.findMany({
-                    where: stateFilter,
+                    where: masterWhere,
                     select: { email: true, name: true },
                 });
                 for (const m of masters) {
@@ -102,8 +104,10 @@ export async function POST(request: Request) {
             }
 
             if (target === 'ALL' || target === 'FRANQUEADO') {
+                const franqueadoWhere: any = { ...stateFilter };
+                if (franqueadoIds?.length > 0) franqueadoWhere.id = { in: franqueadoIds };
                 const franqueados = await prisma.franqueado.findMany({
-                    where: stateFilter,
+                    where: franqueadoWhere,
                     select: { email: true, name: true },
                 });
                 for (const f of franqueados) {

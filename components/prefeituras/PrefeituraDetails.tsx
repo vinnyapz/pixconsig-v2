@@ -14,7 +14,14 @@ import {
   MessageSquare,
   FileCheck2,
   Calendar,
+  Send,
+  X,
+  Loader2,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 import { WorkflowActions } from "./WorkflowActions";
 import { PrefeituraMessages } from "./PrefeituraMessages";
 import { FollowUpTab } from "./FollowUpTab";
@@ -59,6 +66,44 @@ export function PrefeituraDetails({
   const [activeTab, setActiveTab] = useState<"info" | "loans" | "files" | "messages" | "followups">(
     "info",
   );
+  const [showMsgModal, setShowMsgModal] = useState(false);
+  const [msgSubject, setMsgSubject] = useState("");
+  const [msgBody, setMsgBody] = useState("");
+  const [sendingMsg, setSendingMsg] = useState(false);
+
+  const handleSendDirectMessage = async () => {
+    if (!msgSubject.trim() || !msgBody.trim()) {
+      toast.error("Preencha o assunto e a mensagem");
+      return;
+    }
+    setSendingMsg(true);
+    try {
+      const res = await fetch("/api/mensagem-direta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prefeituraId: displayPrefeitura.id,
+          subject: msgSubject,
+          message: msgBody,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Erro ao enviar");
+      }
+      const data = await res.json();
+      const names = data.sentTo.map((r: any) => `${r.name} (${r.role})`).join(", ");
+      toast.success(`Mensagem enviada para: ${names}`);
+      setShowMsgModal(false);
+      setMsgSubject("");
+      setMsgBody("");
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao enviar mensagem");
+    } finally {
+      setSendingMsg(false);
+    }
+  };
+
   const isMaster = userType === "master";
   const [cachedPrefeitura, setCachedPrefeitura] = useState<Prefeitura | null>(
     prefeitura,
@@ -101,7 +146,7 @@ export function PrefeituraDetails({
   };
 
   return (
-    <Drawer
+    <>
       isOpen={isOpen}
       onClose={onClose}
       title={`${displayPrefeitura.city} - ${displayPrefeitura.state}`}
@@ -109,6 +154,21 @@ export function PrefeituraDetails({
       size="lg"
       headerActions={
         <div className="flex items-center gap-1">
+          {(userType === "admin" || userType === "superadmin") && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowMsgModal(true)}
+              title="Enviar mensagem direta ao responsável"
+              className={cn(
+                isMaster
+                  ? "hover:bg-white/5 text-[#C0C0C0] hover:text-[#00D9FF]"
+                  : "hover:bg-blue-50 text-gray-600 hover:text-blue-600",
+              )}
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -239,6 +299,64 @@ export function PrefeituraDetails({
         theme={isMaster ? "dark" : "default"}
       />
     </Drawer>
+
+      {/* Mini modal de mensagem direta */}
+      {showMsgModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowMsgModal(false)} />
+          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-base">Mensagem Direta</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Será enviada ao Master e/ou Franqueado responsável por{" "}
+                  <strong>{displayPrefeitura.city} - {displayPrefeitura.state}</strong>
+                </p>
+              </div>
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setShowMsgModal(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Assunto</Label>
+                <Input
+                  placeholder="Ex: Pendência de documentação"
+                  value={msgSubject}
+                  onChange={e => setMsgSubject(e.target.value)}
+                  maxLength={80}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Mensagem</Label>
+                <Textarea
+                  placeholder="Detalhe o aviso, cobrança ou instrução..."
+                  value={msgBody}
+                  onChange={e => setMsgBody(e.target.value)}
+                  rows={5}
+                  className="resize-none text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <Button variant="outline" className="flex-1" onClick={() => setShowMsgModal(false)}>
+                Cancelar
+              </Button>
+              <Button
+                className="flex-1 gap-2"
+                onClick={handleSendDirectMessage}
+                disabled={sendingMsg || !msgSubject.trim() || !msgBody.trim()}
+              >
+                {sendingMsg ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {sendingMsg ? "Enviando..." : "Enviar"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
