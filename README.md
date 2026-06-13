@@ -1,6 +1,6 @@
 # PixConsig v2 — Sistema de Gestão de Franqueados
 
-Plataforma de gestão para franqueados que captam prefeituras para convênios de consignado via cartão benefício.
+Plataforma de gestão para franqueados da PIXCONSIG. Atualizado por ViNny Azevedo
 
 ## 🛠️ Stack
 - **Next.js 16** (App Router) + **TypeScript**
