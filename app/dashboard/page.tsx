@@ -14,7 +14,7 @@ export default function DashboardPage() {
 
     return (
         <>
-            {userType === 'admin' && <AdminDashboard />}
+            {(userType === 'admin' || userType === 'superadmin') && <AdminDashboard />}
             {userType === 'master' && <MasterDashboard />}
             {userType === 'franqueado' && <FranqueadoDashboard />}
 
