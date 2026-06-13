@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from '@/lib/auth-server';
+import { notifyAdmins, notifyPrefeituraOwner } from '@/lib/notification-helpers';
 
 export async function GET(
     request: Request,
@@ -43,7 +44,6 @@ export async function POST(
             return NextResponse.json({ error: 'Mensagem não pode ser vazia' }, { status: 400 });
         }
 
-        // Buscar nome do remetente
         const user = await prisma.user.findUnique({
             where: { id: session.id },
             select: { name: true },
@@ -53,11 +53,32 @@ export async function POST(
             data: {
                 content: content.trim(),
                 senderName: user?.name || session.email,
-                senderType: session.type.toUpperCase() as any, // Assumindo enum compatível
+                senderType: session.type.toUpperCase() as any,
                 senderId: session.id,
                 prefeituraId: id,
             },
         });
+
+        // Buscar prefeitura para montar notificação
+        const prefeitura = await prisma.prefeitura.findUnique({
+            where: { id },
+            select: { city: true, state: true },
+        });
+
+        const senderName = user?.name || session.email;
+        const title = `💬 Nova mensagem em ${prefeitura?.city || 'prefeitura'}`;
+        const notifContent = `${senderName}: "${content.trim().substring(0, 80)}${content.length > 80 ? '...' : ''}"`;
+        const link = `/prefeituras`;
+
+        // Se quem enviou é FRANQUEADO ou MASTER → notifica admins
+        if (session.type === 'franqueado' || session.type === 'master') {
+            await notifyAdmins(title, notifContent, link);
+        }
+
+        // Se quem enviou é ADMIN → notifica franqueado/master dono da prefeitura
+        if (session.type === 'admin') {
+            await notifyPrefeituraOwner(id, title, notifContent, link);
+        }
 
         return NextResponse.json(message, { status: 201 });
     } catch (error) {
