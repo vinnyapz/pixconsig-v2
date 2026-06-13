@@ -112,14 +112,22 @@ export async function POST(request: Request) {
                 if (franqueadoIds && franqueadoIds.length > 0) franqueadoWhere.id = { in: franqueadoIds };
                 const franqueados = await prisma.franqueado.findMany({
                     where: franqueadoWhere,
-                    select: { email: true, name: true },
+                    select: { id: true, email: true, name: true },
                 });
+                console.log('[COMUNICADOS] franqueados encontrados:', franqueados.map((f: any) => ({ id: f.id, email: f.email })));
                 for (const f of franqueados) {
-                    const user = await prisma.user.findUnique({
+                    // Tenta achar pelo email
+                    let user = await prisma.user.findUnique({
                         where: { email: f.email },
                         select: { id: true, email: true, name: true },
                     });
-                    if (user) recipients.push(user);
+                    console.log('[COMUNICADOS] user para', f.email, ':', user ? user.id : 'NÃO ENCONTRADO');
+                    // Se não achou pelo email, envia direto para o email do franqueado
+                    if (!user) {
+                        recipients.push({ id: f.id, email: f.email, name: f.name });
+                    } else {
+                        recipients.push(user);
+                    }
                 }
             }
         }
