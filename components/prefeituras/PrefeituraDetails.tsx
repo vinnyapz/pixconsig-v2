@@ -147,12 +147,13 @@ export function PrefeituraDetails({
 
   return (
     <>
-      isOpen={isOpen}
-      onClose={onClose}
-      title={`${displayPrefeitura.city} - ${displayPrefeitura.state}`}
-      subtitle={displayPrefeitura.cnpj ?? undefined}
-      size="lg"
-      headerActions={
+      <Drawer
+        isOpen={isOpen}
+        onClose={onClose}
+        title={`${displayPrefeitura.city} - ${displayPrefeitura.state}`}
+        subtitle={displayPrefeitura.cnpj ?? undefined}
+        size="lg"
+        headerActions={
         <div className="flex items-center gap-1">
           {(userType === "admin" || userType === "superadmin") && (
             <Button
