@@ -422,7 +422,7 @@ export async function getDashboardSummary(
 ): Promise<DashboardSummaryResponse> {
     const type = userType.toUpperCase();
 
-    if (type === 'ADMIN') {
+    if (type === 'ADMIN' || type === 'SUPERADMIN') {
         const [loanStats, prefeituraStats, thirdCard, loanChartData, rankings] = await Promise.all([
             getLoanStats('global'),
             getPrefeituraStats('global'),
