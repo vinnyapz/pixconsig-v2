@@ -51,7 +51,7 @@ export function AdminDashboard() {
                     trend={data.loanStats.trend}
                     description={data.loanStats.description}
                     icon={<DollarSign className="h-6 w-6" />}
-                    userType={userType || 'admin'}
+                    userType={userType === 'superadmin' ? 'admin' : (userType || 'admin')}
                 />
 
                 {/* Consolidated Prefeituras Card */}
