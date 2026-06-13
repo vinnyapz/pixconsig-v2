@@ -302,7 +302,7 @@ function PrefeituraModal({ prefeitura, onClose }: { prefeitura: PrefeituraKanban
   );
 }
 
-export function KanbanBoard() {
+export function KanbanBoard({ searchQuery = '', stateFilter = 'all' }: { searchQuery?: string; stateFilter?: string }) {
   const [prefeituras, setPrefeituras] = useState<PrefeituraKanban[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<PrefeituraKanban | null>(null);
@@ -333,7 +333,19 @@ export function KanbanBoard() {
         <div className="flex gap-4 min-w-max">
           {COLUNAS.map(col => {
             const Icon = col.icon;
-            const itens = prefeituras.filter(p => p.status === col.key);
+            const itens = prefeituras.filter(p => {
+              if (p.status !== col.key) return false;
+              if (stateFilter !== 'all' && p.state !== stateFilter) return false;
+              if (searchQuery.trim()) {
+                const q = searchQuery.toLowerCase().trim();
+                const cityMatch = p.city?.toLowerCase().includes(q);
+                const stateMatch = p.state?.toLowerCase().includes(q);
+                const franqueadoMatch = p.franqueado?.name?.toLowerCase().includes(q);
+                const masterMatch = p.master?.name?.toLowerCase().includes(q);
+                if (!cityMatch && !stateMatch && !franqueadoMatch && !masterMatch) return false;
+              }
+              return true;
+            });
             return (
               <div key={col.key} className="w-64 flex-shrink-0">
                 <div className={cn('rounded-t-xl px-4 py-3 border-t-4 bg-white flex items-center justify-between', col.color)}>

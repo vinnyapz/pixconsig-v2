@@ -648,7 +648,7 @@ export function PrefeiturasContent() {
 
             {/* List */}
             {activeTab === 'kanban' ? (
-              <KanbanBoard />
+              <KanbanBoard searchQuery={searchQuery} stateFilter={stateFilter} />
             ) : (
             <PrefeituraList
               prefeituras={filteredPrefeituras}
