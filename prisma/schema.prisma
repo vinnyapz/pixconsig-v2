@@ -299,3 +299,15 @@ model NotificationPreference {
 
   @@map("notification_preferences")
 }
+
+model Comunicado {
+  id          String   @id @default(uuid())
+  title       String
+  message     String
+  target      String   // 'ALL' | 'MASTER' | 'FRANQUEADO' | 'ADMIN'
+  sentById    String
+  sentAt      DateTime @default(now())
+  totalSent   Int      @default(0)
+
+  @@map("comunicados")
+}

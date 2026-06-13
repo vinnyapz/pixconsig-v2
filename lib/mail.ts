@@ -150,3 +150,62 @@ export async function sendWelcomeEmail(email: string, pass: string) {
     return false;
   }
 }
+
+export async function sendComunicadoEmail(email: string, name: string, title: string, message: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:2602';
+  const logoUrl = `${baseUrl}/logo-grupo.jpg`;
+  const loginLink = `${baseUrl}/dashboard`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${title}</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden;">
+        <tr>
+          <td align="center" style="padding: 30px 20px; border-bottom: 1px solid #eeeeee;">
+            <img src="${logoUrl}" alt="Logo Grupo Raman" width="150" style="display: block; width: 150px; max-width: 100%; height: auto;">
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 30px 20px; color: #333333; font-size: 16px; line-height: 1.6;">
+            <p style="margin: 0 0 10px 0; color: #888888; font-size: 13px;">📢 COMUNICADO OFICIAL</p>
+            <h2 style="margin: 0 0 20px 0; font-size: 22px; color: #0066A1;">${title}</h2>
+            <p style="margin: 0 0 10px 0;">Olá, <strong>${name}</strong>!</p>
+            <div style="background-color: #f9f9fa; border-left: 4px solid #0066A1; padding: 15px 20px; margin: 20px 0; border-radius: 0 6px 6px 0; color: #444444; white-space: pre-line;">
+              ${message}
+            </div>
+            <div style="text-align: center; margin: 25px 0;">
+              <a href="${loginLink}" style="display: inline-block; background-color: #0066A1; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px;">
+                Acessar a Plataforma
+              </a>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td align="center" style="padding: 20px; background-color: #f9f9fa; border-top: 1px solid #eeeeee; color: #888888; font-size: 12px;">
+            <p style="margin: 0;">&copy; ${new Date().getFullYear()} Grupo Raman. Todos os direitos reservados.</p>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  try {
+    await transporter.sendMail({
+      from: `"PixConsig" <${SMTP_USER}>`,
+      to: email,
+      subject: `📢 ${title}`,
+      html,
+    });
+    return true;
+  } catch (error) {
+    console.error('Error sending comunicado email:', error);
+    return false;
+  }
+}
