@@ -178,17 +178,17 @@ export function SettingsContent() {
                 <Target className="h-4 w-4" />
                 Metas
               </Button>
-              <Button
-                variant="ghost"
-                onClick={() => setActiveTab("notifications")}
-                className={cn(
-                  "flex-1 justify-center rounded-none border-b-2 gap-2 h-auto py-4 px-6 text-sm font-medium transition-colors hover:bg-transparent min-w-[140px]",
-                  activeTab === "notifications" ? styles.tabActive : styles.tabInactive
-                )}
-              >
-                Notificações ✨
-              </Button>
             )}
+            <Button
+              variant="ghost"
+              onClick={() => setActiveTab("notifications")}
+              className={cn(
+                "flex-1 justify-center rounded-none border-b-2 gap-2 h-auto py-4 px-6 text-sm font-medium transition-colors hover:bg-transparent min-w-[140px]",
+                activeTab === "notifications" ? styles.tabActive : styles.tabInactive
+              )}
+            >
+              Notificações ✨
+            </Button>
           </div>
         </div>
 
