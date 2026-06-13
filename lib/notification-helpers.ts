@@ -11,7 +11,13 @@ const STATUS_LABELS: Record<string, string> = {
 
 type NotifType = 'onMessage' | 'onFile' | 'onStatusChange' | 'onNewRequest' | 'onFollowUp' | 'onPrefeituraAlert';
 
-/** Verifica se o usuário é SUPERADMIN (modo teste - sem notificações) */
+/** Verifica se o modo manutenção está ativo */
+async function isMaintenanceModeActive(): Promise<boolean> {
+    const setting = await prisma.appSetting.findUnique({ where: { key: 'maintenance_mode' } }).catch(() => null);
+    return setting?.value === 'true';
+}
+
+/** Verifica se o usuário é SUPERADMIN */
 async function isSuperAdmin(userId: string): Promise<boolean> {
     const user = await prisma.user.findUnique({
         where: { id: userId },
@@ -49,7 +55,7 @@ export async function createSystemMessage(prefeituraId: string, content: string)
     });
 }
 
-/** Notifica todos os ADMINs ativos (exceto SUPERADMINs) */
+/** Notifica todos os ADMINs ativos */
 export async function notifyAdmins(
     title: string,
     content: string,
@@ -57,11 +63,14 @@ export async function notifyAdmins(
     type: NotifType = 'onMessage',
     senderUserId?: string
 ) {
+    // Se modo manutenção ativo, não notifica ninguém
+    if (await isMaintenanceModeActive()) return;
+
     // Se quem disparou é SUPERADMIN, não notifica ninguém
     if (senderUserId && await isSuperAdmin(senderUserId)) return;
 
     const admins = await prisma.user.findMany({
-        where: { type: 'ADMIN', status: 'ACTIVE' },
+        where: { type: { in: ['ADMIN', 'SUPERADMIN'] }, status: 'ACTIVE' },
         select: { id: true },
     });
 
@@ -91,6 +100,9 @@ export async function notifyPrefeituraOwner(
     type: NotifType = 'onMessage',
     senderUserId?: string
 ) {
+    // Se modo manutenção ativo, não notifica ninguém
+    if (await isMaintenanceModeActive()) return;
+
     // Se quem disparou é SUPERADMIN, não notifica ninguém
     if (senderUserId && await isSuperAdmin(senderUserId)) return;
 

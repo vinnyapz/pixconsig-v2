@@ -11,11 +11,12 @@ import { cn } from "@/lib/utils";
 import { UsersTab } from "@/components/settings/UsersTab";
 import { GoalsTab } from "@/components/settings/GoalsTab";
 import { NotificationsTab } from "@/components/settings/NotificationsTab";
+import { SuperAdminTab } from "@/components/settings/SuperAdminTab";
 import { toast } from "sonner";
 
 export function SettingsContent() {
   const { userType } = useAuth();
-  const [activeTab, setActiveTab] = useState<"commissions" | "ai" | "users" | "goals" | "notifications">("commissions");
+  const [activeTab, setActiveTab] = useState<"commissions" | "ai" | "users" | "goals" | "notifications" | "superadmin">("commissions");
 
   // Configurações existentes
   const [settings, setSettings] = useState({
@@ -177,6 +178,18 @@ export function SettingsContent() {
               >
                 <Target className="h-4 w-4" />
                 Metas
+              </Button>
+            )}
+            {(userType === 'superadmin') && (
+              <Button
+                variant="ghost"
+                onClick={() => setActiveTab("superadmin")}
+                className={cn(
+                  "flex-1 justify-center rounded-none border-b-2 gap-2 h-auto py-4 px-6 text-sm font-medium transition-colors hover:bg-transparent min-w-[140px]",
+                  activeTab === "superadmin" ? "border-yellow-500 text-yellow-600 bg-yellow-50/30" : styles.tabInactive
+                )}
+              >
+                ⭐ SuperAdmin
               </Button>
             )}
             <Button
@@ -373,6 +386,9 @@ export function SettingsContent() {
           )}
           {activeTab === "notifications" && (
             <NotificationsTab />
+          )}
+          {activeTab === "superadmin" && (
+            <SuperAdminTab />
           )}
 
         </div>

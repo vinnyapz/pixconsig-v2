@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
     Table,
@@ -27,6 +26,8 @@ import {
     UserCheck,
     UserX,
     ShieldAlert,
+    ShieldCheck,
+    ShieldMinus,
     Loader2,
     Send,
 } from "lucide-react";
@@ -46,16 +47,18 @@ interface User {
 }
 
 export function UsersTab() {
-    const { user } = useAuth(); // Usuário logado atual
+    const { user, userType } = useAuth();
+    const isSuperAdmin = userType === 'superadmin';
+
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
 
-    // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [userToEdit, setUserToEdit] = useState<User | null>(null);
     const [userToDelete, setUserToDelete] = useState<User | null>(null);
     const [userToResend, setUserToResend] = useState<User | null>(null);
+    const [userToPromote, setUserToPromote] = useState<{ user: User; promote: boolean } | null>(null);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -83,55 +86,64 @@ export function UsersTab() {
         setIsModalOpen(true);
     };
 
-    const handleEdit = (user: User) => {
-        setUserToEdit(user);
+    const handleEdit = (u: User) => {
+        setUserToEdit(u);
         setIsModalOpen(true);
     };
 
-    const handleDelete = (user: User) => {
-        setUserToDelete(user);
-    };
+    const handleDelete = (u: User) => setUserToDelete(u);
 
     const confirmDelete = async () => {
         if (!userToDelete) return;
-
         try {
-            const response = await fetch(`/api/users/${userToDelete.id}`, {
-                method: "DELETE",
-            });
-
+            const response = await fetch(`/api/users/${userToDelete.id}`, { method: "DELETE" });
             if (!response.ok) {
                 const data = await response.json();
                 throw new Error(data.error || "Erro ao excluir");
             }
-
             toast.success("Usuário excluído com sucesso");
             fetchUsers();
-            setUserToDelete(null); // Close modal
+            setUserToDelete(null);
         } catch (error: any) {
             toast.error(error.message);
         }
     };
 
-    const handleResendAccess = (user: User) => {
-        setUserToResend(user);
-    };
+    const handleResendAccess = (u: User) => setUserToResend(u);
 
     const confirmResendAccess = async () => {
         if (!userToResend) return;
-
         try {
-            const response = await fetch(`/api/users/${userToResend.id}/resend-access`, {
-                method: "POST",
-            });
-
+            const response = await fetch(`/api/users/${userToResend.id}/resend-access`, { method: "POST" });
             if (!response.ok) {
                 const data = await response.json();
                 throw new Error(data.error || "Erro ao reenviar acesso");
             }
-
             toast.success("Credenciais reenviadas com sucesso");
-            setUserToResend(null); // Close modal
+            setUserToResend(null);
+        } catch (error: any) {
+            toast.error(error.message);
+        }
+    };
+
+    const confirmPromote = async () => {
+        if (!userToPromote) return;
+        try {
+            const response = await fetch('/api/users/promote', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: userToPromote.user.id, promote: userToPromote.promote }),
+            });
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || "Erro ao alterar nível");
+            }
+            toast.success(userToPromote.promote
+                ? `${userToPromote.user.name} promovido a SuperAdmin!`
+                : `${userToPromote.user.name} rebaixado para Admin.`
+            );
+            fetchUsers();
+            setUserToPromote(null);
         } catch (error: any) {
             toast.error(error.message);
         }
@@ -145,6 +157,8 @@ export function UsersTab() {
 
     const getTypeBadge = (type: string) => {
         switch (type) {
+            case "SUPERADMIN":
+                return <Badge className="bg-yellow-500/15 text-yellow-600 hover:bg-yellow-500/25 border-0">⭐ SuperAdmin</Badge>;
             case "ADMIN":
                 return <Badge className="bg-purple-500/15 text-purple-600 hover:bg-purple-500/25 border-0">Admin</Badge>;
             case "MASTER":
@@ -158,20 +172,15 @@ export function UsersTab() {
 
     const getStatusIcon = (status: string) => {
         switch (status) {
-            case "ACTIVE":
-                return <UserCheck className="h-4 w-4 text-green-500" />;
-            case "INACTIVE":
-                return <UserX className="h-4 w-4 text-gray-400" />;
-            case "BLOCKED":
-                return <ShieldAlert className="h-4 w-4 text-red-500" />;
-            default:
-                return null;
+            case "ACTIVE": return <UserCheck className="h-4 w-4 text-green-500" />;
+            case "INACTIVE": return <UserX className="h-4 w-4 text-gray-400" />;
+            case "BLOCKED": return <ShieldAlert className="h-4 w-4 text-red-500" />;
+            default: return null;
         }
     };
 
     return (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            {/* Header Actions */}
             <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
                 <div className="relative w-full sm:w-72">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -196,7 +205,6 @@ export function UsersTab() {
                 Total: <span className="font-medium text-foreground">{filteredUsers.length}</span>
             </div>
 
-            {/* Table */}
             <div className="rounded-md border bg-card">
                 <Table>
                     <TableHeader>
@@ -248,6 +256,27 @@ export function UsersTab() {
                                                 <DropdownMenuItem onClick={() => handleEdit(u)}>
                                                     <Pencil className="mr-2 h-4 w-4" /> Editar
                                                 </DropdownMenuItem>
+
+                                                {/* Opções exclusivas de SuperAdmin */}
+                                                {isSuperAdmin && user?.id !== u.id && u.type === 'ADMIN' && (
+                                                    <>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem onClick={() => setUserToPromote({ user: u, promote: true })}>
+                                                            <ShieldCheck className="mr-2 h-4 w-4 text-yellow-600" />
+                                                            <span className="text-yellow-600">Promover a SuperAdmin</span>
+                                                        </DropdownMenuItem>
+                                                    </>
+                                                )}
+                                                {isSuperAdmin && user?.id !== u.id && u.type === 'SUPERADMIN' && (
+                                                    <>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem onClick={() => setUserToPromote({ user: u, promote: false })}>
+                                                            <ShieldMinus className="mr-2 h-4 w-4 text-orange-500" />
+                                                            <span className="text-orange-500">Rebaixar para Admin</span>
+                                                        </DropdownMenuItem>
+                                                    </>
+                                                )}
+
                                                 {user?.id !== u.id && (
                                                     <>
                                                         <DropdownMenuSeparator />
@@ -296,6 +325,19 @@ export function UsersTab() {
                 title="Reenviar Acesso"
                 description={`Tem certeza que deseja reenviar o acesso para o usuário ${userToResend?.name}? Isso irá gerar uma nova senha e enviar para o email cadastrado.`}
                 confirmText="Reenviar"
+            />
+
+            <ConfirmDialog
+                isOpen={!!userToPromote}
+                onClose={() => setUserToPromote(null)}
+                onConfirm={confirmPromote}
+                title={userToPromote?.promote ? "Promover a SuperAdmin" : "Rebaixar para Admin"}
+                description={userToPromote?.promote
+                    ? `Tem certeza que deseja promover ${userToPromote?.user.name} a SuperAdmin? Ele terá acesso total ao sistema.`
+                    : `Tem certeza que deseja rebaixar ${userToPromote?.user.name} para Admin?`
+                }
+                confirmText={userToPromote?.promote ? "Promover" : "Rebaixar"}
+                variant={userToPromote?.promote ? "default" : "destructive"}
             />
         </div>
     );
