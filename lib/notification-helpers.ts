@@ -105,7 +105,7 @@ async function filterUsersByPreference(userIds: string[], type: NotifType): Prom
         select: { userId: true, [type]: true },
     });
 
-    const prefsMap = Object.fromEntries(prefs.map(p => [p.userId, p[type] as boolean]));
+    const prefsMap = Object.fromEntries(prefs.map((p: Record<string, any>) => [p.userId, p[type] as boolean]));
 
     return userIds.filter(id => {
         if (!(id in prefsMap)) return true;
@@ -147,7 +147,7 @@ export async function notifyAdmins(
 
     if (admins.length === 0) return;
 
-    const allIds = admins.map(a => a.id);
+    const allIds = admins.map((a: { id: string; email: string }) => a.id);
     const filteredIds = await filterUsersByPreference(allIds, type);
     if (filteredIds.length === 0) return;
 
@@ -163,9 +163,9 @@ export async function notifyAdmins(
     });
 
     // Envia email para cada admin filtrado
-    const filteredAdmins = admins.filter(a => filteredIds.includes(a.id));
+    const filteredAdmins = admins.filter((a: { id: string; email: string }) => filteredIds.includes(a.id));
     await Promise.allSettled(
-        filteredAdmins.map(a => sendNotificationEmail(a.email, title, content, link))
+        filteredAdmins.map((a: { email: string }) => sendNotificationEmail(a.email, title, content, link))
     );
 }
 
@@ -238,7 +238,7 @@ export async function notifyPrefeituraOwner(
     // Envia email para cada dono filtrado
     const filteredOwners = owners.filter(o => filteredIds.includes(o.id));
     await Promise.allSettled(
-        filteredOwners.map(o => sendNotificationEmail(o.email, title, content, link))
+        filteredOwners.map((o: { email: string }) => sendNotificationEmail(o.email, title, content, link))
     );
 }
 

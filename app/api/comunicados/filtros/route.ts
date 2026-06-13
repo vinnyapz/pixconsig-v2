@@ -29,7 +29,7 @@ export async function GET(request: Request) {
                 orderBy: { name: 'asc' },
             });
 
-            const estados = [...new Set(franqueados.map(f => f.state).filter(Boolean))].sort();
+            const estados = [...new Set(franqueados.map((f: any) => f.state).filter(Boolean))].sort() as string[];
             return NextResponse.json({ franqueados, estados, isMaster: true });
         }
 
@@ -40,8 +40,8 @@ export async function GET(request: Request) {
         ]);
 
         const allStates = [...new Set([
-            ...masterStates.map(m => m.state),
-            ...franqueadoStates.map(f => f.state),
+            ...masterStates.map((m: any) => m.state),
+            ...franqueadoStates.map((f: any) => f.state),
         ].filter(Boolean))].sort();
 
         // Buscar lista de franqueados se target for FRANQUEADO ou ALL

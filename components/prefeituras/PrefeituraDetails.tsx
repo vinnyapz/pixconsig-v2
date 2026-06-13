@@ -82,7 +82,7 @@ export function PrefeituraDetails({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prefeituraId: displayPrefeitura.id,
+          prefeituraId: displayPrefeitura?.id,
           subject: msgSubject,
           message: msgBody,
         }),
