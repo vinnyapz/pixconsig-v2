@@ -12,7 +12,7 @@ interface StatCardProps {
     icon: React.ReactNode;
     description?: string;
     footerDetails?: React.ReactNode;
-    userType?: 'admin' | 'master' | 'franqueado';
+    userType?: 'superadmin' | 'admin' | 'master' | 'franqueado';
 }
 
 export function StatCard({

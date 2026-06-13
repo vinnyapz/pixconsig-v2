@@ -11,7 +11,7 @@ interface Achievement {
 
 interface AchievementTimelineProps {
     currentAmount: number;
-    userType?: 'admin' | 'master' | 'franqueado';
+    userType?: 'superadmin' | 'admin' | 'master' | 'franqueado';
 }
 
 export function AchievementTimeline({

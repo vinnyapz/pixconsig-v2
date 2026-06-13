@@ -20,7 +20,7 @@ interface FileUploadProps {
   maxSizeMB?: number;
   acceptedTypes?: string[];
   showFileList?: boolean;
-  userType?: "admin" | "master" | "franqueado";
+  userType?: "superadmin" | "admin" | "master" | "franqueado";
 }
 
 export function FileUpload({

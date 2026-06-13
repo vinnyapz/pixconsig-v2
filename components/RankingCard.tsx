@@ -13,7 +13,7 @@ interface RankingCardProps {
     title: string;
     items: RankingItem[];
     type: 'money' | 'count';
-    userType?: 'admin' | 'master' | 'franqueado';
+    userType?: 'superadmin' | 'admin' | 'master' | 'franqueado';
 }
 
 export function RankingCard({
