@@ -1,6 +1,8 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Building2, Clock, AlertCircle, CheckCircle2, XCircle, FileText, X, MessageSquare, Upload, Activity } from 'lucide-react';
+import { Building2, Clock, AlertCircle, CheckCircle2, XCircle, FileText, X, MessageSquare, Upload, Activity, Send, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface PrefeituraKanban {
@@ -67,6 +69,41 @@ interface TimelineItem {
 function PrefeituraModal({ prefeitura, onClose }: { prefeitura: PrefeituraKanban; onClose: () => void }) {
   const [detail, setDetail] = useState<PrefeituraKanban | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showMsgModal, setShowMsgModal] = useState(false);
+  const [msgSubject, setMsgSubject] = useState('');
+  const [msgBody, setMsgBody] = useState('');
+  const [sendingMsg, setSendingMsg] = useState(false);
+  const { userType } = useAuth();
+  const isAdmin = userType === 'admin' || userType === 'superadmin';
+
+  const handleSendDirectMessage = async () => {
+    if (!msgSubject.trim() || !msgBody.trim()) {
+      toast.error('Preencha o assunto e a mensagem');
+      return;
+    }
+    setSendingMsg(true);
+    try {
+      const res = await fetch('/api/mensagem-direta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prefeituraId: prefeitura.id, subject: msgSubject, message: msgBody }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Erro ao enviar');
+      }
+      const data = await res.json();
+      const names = data.sentTo.map((r: any) => `${r.name} (${r.role})`).join(', ');
+      toast.success(`Mensagem enviada para: ${names}`);
+      setShowMsgModal(false);
+      setMsgSubject('');
+      setMsgBody('');
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao enviar mensagem');
+    } finally {
+      setSendingMsg(false);
+    }
+  };
 
   useEffect(() => {
     fetch(`/api/prefeituras/${prefeitura.id}`)
@@ -129,9 +166,20 @@ function PrefeituraModal({ prefeitura, onClose }: { prefeitura: PrefeituraKanban
               {STATUS_LABELS[prefeitura.status]}
             </span>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            {isAdmin && (
+              <button
+                onClick={() => setShowMsgModal(true)}
+                title="Enviar mensagem direta ao responsável"
+                className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg transition-colors"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            )}
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Info rápida */}
