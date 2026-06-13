@@ -276,3 +276,25 @@ enum NotificationType {
   STATUS_CHANGE
   FOLLOWUP
 }
+
+model NotificationPreference {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  // Mensagens
+  onMessage        Boolean @default(true)
+  // Arquivos
+  onFile           Boolean @default(true)
+  // Mudança de status
+  onStatusChange   Boolean @default(true)
+  // Novas solicitações de prefeitura
+  onNewRequest     Boolean @default(true)
+  // Follow-ups vencendo
+  onFollowUp       Boolean @default(true)
+  // Alertas de prefeitura parada
+  onPrefeituraAlert Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("notification_preferences")
+}

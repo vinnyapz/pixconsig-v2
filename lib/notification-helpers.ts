@@ -1,7 +1,5 @@
-
 import { prisma } from '@/lib/prisma';
 
-// Mapa de labels amigáveis para status
 const STATUS_LABELS: Record<string, string> = {
     AGUARDANDO_ANALISE: 'Aguardando Análise',
     AGUARDANDO_DECRETO: 'Aguardando Decreto',
@@ -11,11 +9,26 @@ const STATUS_LABELS: Record<string, string> = {
     REPROVADA: 'Reprovada',
 };
 
+type NotifType = 'onMessage' | 'onFile' | 'onStatusChange' | 'onNewRequest' | 'onFollowUp' | 'onPrefeituraAlert';
+
+/** Filtra usuários que aceitam determinado tipo de notificação */
+async function filterUsersByPreference(userIds: string[], type: NotifType): Promise<string[]> {
+  const prefs = await prisma.notificationPreference.findMany({
+    where: { userId: { in: userIds } },
+    select: { userId: true, [type]: true },
+  });
+
+  const prefsMap = Object.fromEntries(prefs.map(p => [p.userId, p[type] as boolean]));
+
+  return userIds.filter(id => {
+    // Se não tem preferência cadastrada, assume true (recebe por padrão)
+    if (!(id in prefsMap)) return true;
+    return prefsMap[id] === true;
+  });
+}
+
 /** Cria uma mensagem de sistema no chat da prefeitura */
-export async function createSystemMessage(
-    prefeituraId: string,
-    content: string
-) {
+export async function createSystemMessage(prefeituraId: string, content: string) {
     return prisma.prefeituraMessage.create({
         data: {
             content,
@@ -28,11 +41,12 @@ export async function createSystemMessage(
     });
 }
 
-/** Notifica todos os ADMINs */
+/** Notifica todos os ADMINs ativos que aceitam o tipo */
 export async function notifyAdmins(
     title: string,
     content: string,
-    link: string
+    link: string,
+    type: NotifType = 'onMessage'
 ) {
     const admins = await prisma.user.findMany({
         where: { type: 'ADMIN', status: 'ACTIVE' },
@@ -41,10 +55,14 @@ export async function notifyAdmins(
 
     if (admins.length === 0) return;
 
+    const allIds = admins.map(a => a.id);
+    const filteredIds = await filterUsersByPreference(allIds, type);
+    if (filteredIds.length === 0) return;
+
     await prisma.notification.createMany({
-        data: admins.map((admin) => ({
-            userId: admin.id,
-            type: 'STATUS_CHANGE' as const,
+        data: filteredIds.map(userId => ({
+            userId,
+            type: 'MESSAGE' as const,
             title,
             content,
             link,
@@ -52,12 +70,13 @@ export async function notifyAdmins(
     });
 }
 
-/** Notifica o Master/Franqueado dono da prefeitura */
+/** Notifica o Master/Franqueado dono da prefeitura que aceitam o tipo */
 export async function notifyPrefeituraOwner(
     prefeituraId: string,
     title: string,
     content: string,
-    link: string
+    link: string,
+    type: NotifType = 'onMessage'
 ) {
     const prefeitura = await prisma.prefeitura.findUnique({
         where: { id: prefeituraId },
@@ -68,7 +87,6 @@ export async function notifyPrefeituraOwner(
 
     const ownerIds: string[] = [];
 
-    // Buscar userId do Master vinculado
     if (prefeitura.masterId) {
         const master = await prisma.master.findUnique({
             where: { id: prefeitura.masterId },
@@ -83,7 +101,6 @@ export async function notifyPrefeituraOwner(
         }
     }
 
-    // Buscar userId do Franqueado vinculado
     if (prefeitura.franqueadoId) {
         const franqueado = await prisma.franqueado.findUnique({
             where: { id: prefeitura.franqueadoId },
@@ -100,8 +117,11 @@ export async function notifyPrefeituraOwner(
 
     if (ownerIds.length === 0) return;
 
+    const filteredIds = await filterUsersByPreference(ownerIds, type);
+    if (filteredIds.length === 0) return;
+
     await prisma.notification.createMany({
-        data: ownerIds.map((userId) => ({
+        data: filteredIds.map(userId => ({
             userId,
             type: 'STATUS_CHANGE' as const,
             title,

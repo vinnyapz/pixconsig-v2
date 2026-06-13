@@ -10,11 +10,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { UsersTab } from "@/components/settings/UsersTab";
 import { GoalsTab } from "@/components/settings/GoalsTab";
+import { NotificationsTab } from "@/components/settings/NotificationsTab";
 import { toast } from "sonner";
 
 export function SettingsContent() {
   const { userType } = useAuth();
-  const [activeTab, setActiveTab] = useState<"commissions" | "ai" | "users" | "goals">("commissions");
+  const [activeTab, setActiveTab] = useState<"commissions" | "ai" | "users" | "goals" | "notifications">("commissions");
 
   // Configurações existentes
   const [settings, setSettings] = useState({
@@ -176,6 +177,16 @@ export function SettingsContent() {
               >
                 <Target className="h-4 w-4" />
                 Metas
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setActiveTab("notifications")}
+                className={cn(
+                  "flex-1 justify-center rounded-none border-b-2 gap-2 h-auto py-4 px-6 text-sm font-medium transition-colors hover:bg-transparent min-w-[140px]",
+                  activeTab === "notifications" ? styles.tabActive : styles.tabInactive
+                )}
+              >
+                Notificações ✨
               </Button>
             )}
           </div>
@@ -359,6 +370,9 @@ export function SettingsContent() {
 
           {activeTab === "goals" && (
             <GoalsTab />
+          )}
+          {activeTab === "notifications" && (
+            <NotificationsTab />
           )}
 
         </div>
