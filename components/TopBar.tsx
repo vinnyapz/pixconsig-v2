@@ -5,7 +5,6 @@ import {
   LogOut,
   Menu,
   X,
-  LayoutDashboard,
   Users,
   Building2,
   FileText,
@@ -13,7 +12,7 @@ import {
   Crown,
   Store,
 } from "lucide-react";
-import { Page, UserType } from "@/types";
+import { UserType } from "@/types";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -40,7 +39,6 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Prevent body scroll when menu is open
   useEffect(() => {
     if (isMenuOpen) {
       document.body.style.overflow = "hidden";
@@ -52,7 +50,6 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
     };
   }, [isMenuOpen]);
 
-  // Map URLs to pages for active state
   const isActive = (path: string) => {
     if (path === "/dashboard" && pathname === "/dashboard") return true;
     if (path !== "/dashboard" && pathname.startsWith(path)) return true;
@@ -64,15 +61,15 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
     setIsMenuOpen(false);
   };
 
+  const isAdmin = userType === "admin" || userType === "superadmin";
+
   const NavButton = ({
     path,
     label,
-    icon: Icon,
     isNew,
   }: {
     path: string;
     label: string;
-    icon?: React.ElementType;
     isNew?: boolean;
   }) => (
     <Button
@@ -127,6 +124,8 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
 
   const getRoleIcon = (type: UserType) => {
     switch (type) {
+      case "superadmin":
+        return <ShieldCheck className="h-4 w-4 text-purple-600" />;
       case "admin":
         return <ShieldCheck className="h-4 w-4 text-[#0066A1]" />;
       case "master":
@@ -143,7 +142,6 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-12">
-            {/* Logo and Brand */}
             <div className="flex items-center">
               <div className="bg-[#0066A1] p-1.5 rounded-lg">
                 <img
@@ -154,22 +152,21 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
                 />
               </div>
 
-              {/* Desktop Navigation */}
               <nav className="hidden md:ml-8 md:flex md:space-x-8">
+<<<<<<< HEAD
+                {isAdmin && (
+=======
                 {(userType === "admin" || userType === "superadmin") {userType === "admin" || userType === "superadmin" && ({userType === "admin" || userType === "superadmin" && ( (
+>>>>>>> 11e54d433d9e847545df079907dde0d40803062c
                   <>
                     <NavButton path="/dashboard" label="Dashboard" />
                     <NavButton path="/masters" label="Masters" />
-                    <NavButton
-                      path="/prefeituras/gestao"
-                      label="Gestão de Prefeituras"
-                    />
+                    <NavButton path="/prefeituras/gestao" label="Gestão de Prefeituras" />
                     <NavButton path="/reports" label="Relatórios" />
                     <NavButton path="/comissoes" label="Comissões" isNew />
                     <NavButton path="/metas" label="Metas" isNew />
                   </>
                 )}
-
                 {userType === "master" && (
                   <>
                     <NavButton path="/dashboard" label="Dashboard" />
@@ -179,7 +176,6 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
                     <NavButton path="/metas" label="Metas" isNew />
                   </>
                 )}
-
                 {userType === "franqueado" && (
                   <>
                     <NavButton path="/dashboard" label="Dashboard" />
@@ -190,23 +186,22 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
               </nav>
             </div>
 
-            {/* Right Side Actions */}
             <div className="hidden md:flex items-center space-x-4">
               <NotificationsPopover />
               <div className="flex items-center space-x-4 text-sm text-gray-500 mr-4 border-r border-gray-200 pr-4">
                 {userEmail && (
-                  <span className="text-gray-600 hidden lg:inline-block">
-                    {userEmail}
-                  </span>
+                  <span className="text-gray-600 hidden lg:inline-block">{userEmail}</span>
                 )}
                 <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
                   {getRoleIcon(userType)}
-                  <span className="font-medium text-gray-900">
-                    {getUserTypeLabel(userType)}
-                  </span>
+                  <span className="font-medium text-gray-900">{getUserTypeLabel(userType)}</span>
                 </div>
               </div>
+<<<<<<< HEAD
+              {isAdmin && (
+=======
               {(userType === "admin" || userType === "superadmin") {userType === "admin" || userType === "superadmin" && ({userType === "admin" || userType === "superadmin" && ( (
+>>>>>>> 11e54d433d9e847545df079907dde0d40803062c
                 <Button
                   onClick={() => handleNavigation("/settings")}
                   variant="ghost"
@@ -227,7 +222,6 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
               </Button>
             </div>
 
-            {/* Mobile menu button */}
             <div className="flex items-center md:hidden">
               <Button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -242,7 +236,6 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
         </div>
       </header>
 
-      {/* Mobile Menu Overlay */}
       {isMenuOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity"
@@ -250,7 +243,6 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
         />
       )}
 
-      {/* Mobile Menu Sidebar */}
       <div
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out md:hidden",
@@ -259,11 +251,7 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="bg-[#0066A1] p-1.5 rounded-lg">
-            <img
-              src="/image.png"
-              alt="Grupo Raman"
-              className="h-5 w-auto object-contain"
-            />
+            <img src="/image.png" alt="Grupo Raman" className="h-5 w-auto object-contain" />
           </div>
           <Button
             onClick={() => setIsMenuOpen(false)}
@@ -280,25 +268,20 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
 
         <div className="flex flex-col h-[calc(100%-64px)] justify-between">
           <div className="px-2 py-4 space-y-1 overflow-y-auto">
+<<<<<<< HEAD
+            {isAdmin && (
+=======
             {(userType === "admin" || userType === "superadmin") {userType === "admin" || userType === "superadmin" && ({userType === "admin" || userType === "superadmin" && ( (
+>>>>>>> 11e54d433d9e847545df079907dde0d40803062c
               <>
                 <MobileNavButton path="/dashboard" label="Dashboard" />
                 <MobileNavButton path="/masters" label="Masters" icon={Users} />
-                <MobileNavButton
-                  path="/prefeituras/gestao"
-                  label="Gestão de Prefeituras"
-                  icon={Building2}
-                />
-                <MobileNavButton
-                  path="/reports"
-                  label="Relatórios"
-                  icon={FileText}
-                />
+                <MobileNavButton path="/prefeituras/gestao" label="Gestão de Prefeituras" icon={Building2} />
+                <MobileNavButton path="/reports" label="Relatórios" icon={FileText} />
                 <MobileNavButton path="/comissoes" label="Comissões" icon={FileText} isNew />
                 <MobileNavButton path="/metas" label="Metas" icon={FileText} isNew />
               </>
             )}
-
             {userType === "master" && (
               <>
                 <MobileNavButton path="/dashboard" label="Dashboard" />
@@ -308,7 +291,6 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
                 <MobileNavButton path="/metas" label="Metas" icon={FileText} isNew />
               </>
             )}
-
             {userType === "franqueado" && (
               <>
                 <MobileNavButton path="/dashboard" label="Dashboard" />
@@ -324,18 +306,18 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
                 {userType.charAt(0).toUpperCase()}
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">
-                  {getUserTypeLabel(userType)}
-                </p>
+                <p className="text-sm font-medium text-gray-900">{getUserTypeLabel(userType)}</p>
                 {userEmail && (
-                  <p className="text-xs text-gray-500 truncate max-w-[150px]">
-                    {userEmail}
-                  </p>
+                  <p className="text-xs text-gray-500 truncate max-w-[150px]">{userEmail}</p>
                 )}
               </div>
             </div>
             <div className="flex gap-2">
+<<<<<<< HEAD
+              {isAdmin && (
+=======
               {(userType === "admin" || userType === "superadmin") {userType === "admin" || userType === "superadmin" && ({userType === "admin" || userType === "superadmin" && ( (
+>>>>>>> 11e54d433d9e847545df079907dde0d40803062c
                 <Button
                   onClick={() => handleNavigation("/settings")}
                   variant="outline"
