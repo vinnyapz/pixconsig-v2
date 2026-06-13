@@ -177,7 +177,7 @@ export async function sendComunicadoEmail(email: string, name: string, title: st
             <h2 style="margin: 0 0 20px 0; font-size: 22px; color: #0066A1;">${title}</h2>
             <p style="margin: 0 0 10px 0;">Olá, <strong>${name}</strong>!</p>
             <div style="background-color: #f9f9fa; border-left: 4px solid #0066A1; padding: 15px 20px; margin: 20px 0; border-radius: 0 6px 6px 0; color: #444444; white-space: pre-line;">
-              ${message}
+              ${message.replace(/\n/g, "<br>")}
             </div>
             <div style="text-align: center; margin: 25px 0;">
               <a href="${loginLink}" style="display: inline-block; background-color: #0066A1; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px;">

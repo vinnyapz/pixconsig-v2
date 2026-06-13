@@ -8,9 +8,11 @@ import { sendComunicadoEmail } from '@/lib/mail';
 export async function GET() {
     try {
         const session = await getServerSession();
-        if (!session || !isAdminType(session.type)) {
-            return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 403 });
-        }
+        if (!session) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+
+        const isAdmin = isAdminType(session.type);
+        const isMaster = session.type === 'master';
+        if (!isAdmin && !isMaster) return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 403 });
 
         const comunicados = await (prisma as any).comunicado.findMany({
             orderBy: { sentAt: 'desc' },
@@ -28,59 +30,97 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const session = await getServerSession();
-        if (!session || !isAdminType(session.type)) {
-            return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 403 });
-        }
+        if (!session) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
 
-        const { title, message, target } = await request.json();
+        const isAdmin = isAdminType(session.type);
+        const isMaster = session.type === 'master';
+        if (!isAdmin && !isMaster) return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 403 });
+
+        const { title, message, target, estados, franqueadoIds } = await request.json();
 
         if (!title || !message || !target) {
             return NextResponse.json({ error: 'Título, mensagem e destinatário são obrigatórios' }, { status: 400 });
         }
 
-        // Buscar destinatários conforme o target
-        let userEmails: { id: string; email: string; name: string }[] = [];
-
-        if (target === 'ALL' || target === 'ADMIN') {
-            const admins = await prisma.user.findMany({
-                where: { type: { in: ['ADMIN', 'SUPERADMIN'] }, status: 'ACTIVE' },
-                select: { id: true, email: true, name: true },
-            });
-            userEmails.push(...admins);
+        // Bloqueia envio se modo manutenção estiver ativo
+        const maintenance = await prisma.appSetting.findUnique({ where: { key: 'maintenance_mode' } }).catch(() => null);
+        if (maintenance?.value === 'true') {
+            return NextResponse.json({ error: 'Modo teste ativo. Desative o modo teste antes de enviar comunicados.' }, { status: 403 });
         }
 
-        if (target === 'ALL' || target === 'MASTER') {
-            const masters = await prisma.master.findMany({
-                select: { id: true, email: true, name: true },
-            });
-            // Buscar o userId de cada master pelo email
-            for (const m of masters) {
-                const user = await prisma.user.findUnique({
-                    where: { email: m.email },
-                    select: { id: true, email: true, name: true },
-                });
-                if (user) userEmails.push(user);
+        let recipients: { id: string; email: string; name: string }[] = [];
+
+        if (isMaster) {
+            // Master só envia para seus franqueados
+            const master = await prisma.master.findUnique({ where: { email: session.email } });
+            if (!master) return NextResponse.json({ error: 'Master não encontrado' }, { status: 404 });
+
+            const whereClause: any = { masterId: master.id };
+            if (franqueadoIds?.length > 0) {
+                whereClause.id = { in: franqueadoIds };
+            } else if (estados?.length > 0) {
+                whereClause.state = { in: estados };
             }
-        }
 
-        if (target === 'ALL' || target === 'FRANQUEADO') {
             const franqueados = await prisma.franqueado.findMany({
-                select: { id: true, email: true, name: true },
+                where: whereClause,
+                select: { email: true, name: true },
             });
+
             for (const f of franqueados) {
                 const user = await prisma.user.findUnique({
                     where: { email: f.email },
                     select: { id: true, email: true, name: true },
                 });
-                if (user) userEmails.push(user);
+                if (user) recipients.push(user);
+            }
+
+        } else {
+            // Admin — busca conforme target e filtros de estado
+            const stateFilter = estados?.length > 0 ? { state: { in: estados } } : {};
+
+            if (target === 'ALL' || target === 'ADMIN') {
+                const admins = await prisma.user.findMany({
+                    where: { type: { in: ['ADMIN', 'SUPERADMIN'] }, status: 'ACTIVE' },
+                    select: { id: true, email: true, name: true },
+                });
+                recipients.push(...admins);
+            }
+
+            if (target === 'ALL' || target === 'MASTER') {
+                const masters = await prisma.master.findMany({
+                    where: stateFilter,
+                    select: { email: true, name: true },
+                });
+                for (const m of masters) {
+                    const user = await prisma.user.findUnique({
+                        where: { email: m.email },
+                        select: { id: true, email: true, name: true },
+                    });
+                    if (user) recipients.push(user);
+                }
+            }
+
+            if (target === 'ALL' || target === 'FRANQUEADO') {
+                const franqueados = await prisma.franqueado.findMany({
+                    where: stateFilter,
+                    select: { email: true, name: true },
+                });
+                for (const f of franqueados) {
+                    const user = await prisma.user.findUnique({
+                        where: { email: f.email },
+                        select: { id: true, email: true, name: true },
+                    });
+                    if (user) recipients.push(user);
+                }
             }
         }
 
         // Remover duplicatas por id
-        const unique = Array.from(new Map(userEmails.map(u => [u.id, u])).values());
+        const unique = Array.from(new Map(recipients.map(u => [u.id, u])).values());
 
-        // Salvar notificação no sistema para cada destinatário
         if (unique.length > 0) {
+            // Notificação no sistema
             await prisma.notification.createMany({
                 data: unique.map(u => ({
                     userId: u.id,
@@ -91,7 +131,7 @@ export async function POST(request: Request) {
                 })),
             });
 
-            // Enviar email para todos
+            // Email
             await Promise.allSettled(
                 unique.map(u => sendComunicadoEmail(u.email, u.name, title, message))
             );
@@ -108,10 +148,7 @@ export async function POST(request: Request) {
             },
         });
 
-        return NextResponse.json({
-            success: true,
-            totalSent: unique.length,
-        });
+        return NextResponse.json({ success: true, totalSent: unique.length });
     } catch (error) {
         console.error('Error sending comunicado:', error);
         return NextResponse.json({ error: 'Erro ao enviar comunicado' }, { status: 500 });

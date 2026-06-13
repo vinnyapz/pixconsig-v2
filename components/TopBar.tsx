@@ -80,7 +80,7 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
                   <>
                     <NavButton path="/dashboard" label="Dashboard" />
                     <NavButton path="/masters" label="Masters" />
-                    <NavButton path="/prefeituras/gestao" label="Gestão de Prefeituras" />
+                    <NavButton path="/prefeituras/gestao" label="Gestão de Prefeituras" isNew />
                     <NavButton path="/reports" label="Relatórios" />
                     <NavButton path="/comissoes" label="Comissões" isNew />
                     <NavButton path="/metas" label="Metas" isNew />
@@ -90,7 +90,7 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
                   <>
                     <NavButton path="/dashboard" label="Dashboard" />
                     <NavButton path="/franqueados" label="Franqueados" />
-                    <NavButton path="/prefeituras" label="Prefeituras" />
+                    <NavButton path="/prefeituras" label="Prefeituras" isNew />
                     <NavButton path="/comissoes" label="Comissões" isNew />
                     <NavButton path="/metas" label="Metas" isNew />
                   </>
@@ -98,7 +98,7 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
                 {userType === "franqueado" && (
                   <>
                     <NavButton path="/dashboard" label="Dashboard" />
-                    <NavButton path="/prefeituras" label="Minhas Prefeituras" />
+                    <NavButton path="/prefeituras" label="Minhas Prefeituras" isNew />
                     <NavButton path="/comissoes" label="Comissões" isNew />
                   </>
                 )}
@@ -149,7 +149,7 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
               <>
                 <MobileNavButton path="/dashboard" label="Dashboard" />
                 <MobileNavButton path="/masters" label="Masters" icon={Users} />
-                <MobileNavButton path="/prefeituras/gestao" label="Gestão de Prefeituras" icon={Building2} />
+                <MobileNavButton path="/prefeituras/gestao" label="Gestão de Prefeituras" icon={Building2} isNew />
                 <MobileNavButton path="/reports" label="Relatórios" icon={FileText} />
                 <MobileNavButton path="/comissoes" label="Comissões" icon={FileText} isNew />
                 <MobileNavButton path="/metas" label="Metas" icon={FileText} isNew />
@@ -159,7 +159,7 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
               <>
                 <MobileNavButton path="/dashboard" label="Dashboard" />
                 <MobileNavButton path="/franqueados" label="Franqueados" icon={Users} />
-                <MobileNavButton path="/prefeituras" label="Prefeituras" />
+                <MobileNavButton path="/prefeituras" label="Prefeituras" isNew />
                 <MobileNavButton path="/comissoes" label="Comissões" icon={FileText} isNew />
                 <MobileNavButton path="/metas" label="Metas" icon={FileText} isNew />
               </>
@@ -167,7 +167,7 @@ export function TopBar({ userType, userEmail, onLogout }: TopBarProps) {
             {userType === "franqueado" && (
               <>
                 <MobileNavButton path="/dashboard" label="Dashboard" />
-                <MobileNavButton path="/prefeituras" label="Minhas Prefeituras" />
+                <MobileNavButton path="/prefeituras" label="Minhas Prefeituras" isNew />
                 <MobileNavButton path="/comissoes" label="Comissões" icon={FileText} isNew />
               </>
             )}
