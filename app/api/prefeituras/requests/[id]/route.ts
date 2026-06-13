@@ -88,7 +88,7 @@ export async function PUT(
                         city: existingRequest.city,
                         state: existingRequest.state,
                         cnpj: `${Date.now()}`, // Temporary CNPJ, should be provided in request
-                        status: 'ACTIVE',
+                        status: 'ATIVA',
                         masterId: existingRequest.requesterType === 'MASTER' ? existingRequest.masterId : null,
                         franqueadoId: existingRequest.requesterType === 'FRANQUEADO' ? existingRequest.franqueadoId : null
                     }
