@@ -14,6 +14,7 @@ import { AlertasPrefeituras } from '@/components/common/AlertasPrefeituras';
 export function AdminDashboard() {
     const { userType } = useAuth();
     const { data, isLoading, error } = useDashboardData();
+    const effectiveType = (userType === 'superadmin' ? 'admin' : userType) || 'admin';
 
     if (isLoading) {
         return (
@@ -36,14 +37,9 @@ export function AdminDashboard() {
     }
 
     return (
-        <PageLayout
-            title="Visão Geral"
-            subtitle="Acompanhe os principais indicadores do sistema."
-        >
+        <PageLayout title="Visão Geral" subtitle="Acompanhe os principais indicadores do sistema.">
             <PendingActionsAlert />
             <AlertasPrefeituras />
-
-            {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <StatCard
                     title={data.loanStats.title}
@@ -51,46 +47,39 @@ export function AdminDashboard() {
                     trend={data.loanStats.trend}
                     description={data.loanStats.description}
                     icon={<DollarSign className="h-6 w-6" />}
-                    userType={userType === 'superadmin' ? 'admin' : (userType || 'admin')}
+                    userType={effectiveType}
                 />
-
-                {/* Consolidated Prefeituras Card */}
                 <ConsolidatedPrefeiturasCard
                     total={data.prefeituraStats.total}
                     pending={data.prefeituraStats.pending}
                     active={data.prefeituraStats.active}
                     inactive={data.prefeituraStats.inactive}
-                    userType={userType || 'admin'}
+                    userType={effectiveType}
                     title="Total Prefeituras"
                 />
-
                 <StatCard
                     title={data.thirdCard.title}
                     value={data.thirdCard.value}
                     icon={<Users className="h-6 w-6" />}
                     description={data.thirdCard.description}
-                    userType={userType || 'admin'}
+                    userType={effectiveType}
                 />
             </div>
-
-            {/* Loan Chart - Full Width */}
             <div className="mb-8">
-                <LoanChart data={data.loanChartData} userType={userType || 'admin'} />
+                <LoanChart data={data.loanChartData} userType={effectiveType} />
             </div>
-
-            {/* Rankings Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <RankingCard
                     title="Ranking de Consignados por Master"
                     items={data.rankings?.loanRanking || []}
                     type="money"
-                    userType={userType || 'admin'}
+                    userType={effectiveType}
                 />
                 <RankingCard
                     title="Ranking de Cadastro de Prefeituras"
                     items={data.rankings?.cityRanking || []}
                     type="count"
-                    userType={userType || 'admin'}
+                    userType={effectiveType}
                 />
             </div>
         </PageLayout>
