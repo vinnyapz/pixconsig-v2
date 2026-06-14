@@ -25,8 +25,7 @@ export async function GET(req: NextRequest) {
                 orderBy: { createdAt: 'asc' },
             });
 
-            console.log('[SUPPORT GET] total:', messages.length);
-            if (messages.length > 0) console.log('[SUPPORT GET] primeiro msg keys:', Object.keys(messages[0]));
+                if (messages.length > 0) console.log('[SUPPORT GET] primeiro msg keys:', Object.keys(messages[0]));
             if (messages.length > 0) console.log('[SUPPORT GET] primeiro msg attachment_url:', (messages[0] as any).attachment_url, 'attachmentUrl:', (messages[0] as any).attachmentUrl);
             // Marcar mensagens do usuário como lidas
             await (prisma as any).supportMessage.updateMany({
@@ -117,8 +116,7 @@ export async function GET(req: NextRequest) {
                 },
                 orderBy: { createdAt: 'asc' },
             });
-            console.log('[SUPPORT GET USER] total:', messages.length);
-            if (messages.length > 0) console.log('[SUPPORT GET USER] keys:', Object.keys(messages[0]), 'attachment_url:', (messages[0] as any).attachment_url);
+                if (messages.length > 0) console.log('[SUPPORT GET USER] keys:', Object.keys(messages[0]), 'attachment_url:', (messages[0] as any).attachment_url);
 
             // Marcar mensagens do admin como lidas
             await (prisma as any).supportMessage.updateMany({
@@ -140,9 +138,7 @@ export async function POST(req: NextRequest) {
         const session = await getServerSession();
         if (!session) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
 
-        const body = await req.json();
-        const { content, recipientId, attachmentUrl, attachmentName, attachmentType } = body;
-        console.log('[SUPPORT POST] body:', JSON.stringify(body));
+        const { content, recipientId, attachmentUrl, attachmentName, attachmentType } = await req.json();
         if (!content?.trim() && !attachmentUrl) return NextResponse.json({ error: 'Mensagem ou anexo obrigatório' }, { status: 400 });
 
         const isAdmin = isAdminType(session.type);
@@ -159,7 +155,6 @@ export async function POST(req: NextRequest) {
             targetRecipientId = admin.id;
         }
 
-        console.log('[SUPPORT] criando mensagem para recipientId:', targetRecipientId);
         const message = await (prisma as any).supportMessage.create({
             data: {
                 content: content?.trim() || '',
@@ -185,7 +180,6 @@ export async function POST(req: NextRequest) {
             },
         });
 
-        console.log('[SUPPORT] mensagem criada:', message.id, 'attachment_url:', (message as any).attachment_url, 'attachmentUrl:', (message as any).attachmentUrl);
         return NextResponse.json(message);
     } catch (error) {
         console.error('[SUPPORT POST ERROR]:', error);
