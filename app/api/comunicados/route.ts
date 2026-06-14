@@ -138,23 +138,37 @@ export async function POST(request: Request) {
         console.log('[COMUNICADOS] masterIds:', masterIds);
         console.log('[COMUNICADOS] recipients antes de dedup:', recipients.length, recipients.map(r => r.email));
 
-        // Remover duplicatas por id
-        const unique = Array.from(new Map(recipients.map(u => [u.id, u])).values());
+        // Remover duplicatas por email
+        const uniqueMap = new Map<string, { id: string | null; email: string; name: string }>();
+        for (const r of recipients) {
+            if (!uniqueMap.has(r.email)) uniqueMap.set(r.email, r);
+        }
+        const unique = Array.from(uniqueMap.values());
         console.log('[COMUNICADOS] unique recipients:', unique.length);
 
         if (unique.length > 0) {
-            // Notificação no sistema
-            await prisma.notification.createMany({
-                data: unique.map(u => ({
-                    userId: u.id,
-                    type: 'SYSTEM' as const,
-                    title,
-                    content: message,
-                    link: '/dashboard',
-                })),
+            // Buscar apenas IDs que realmente existem em users
+            const emailsUnique = unique.map(u => u.email);
+            const usuariosValidos = await prisma.user.findMany({
+                where: { email: { in: emailsUnique } },
+                select: { id: true, email: true },
             });
+            const emailsComUser = new Set(usuariosValidos.map((u: { id: string; email: string }) => u.email));
 
-            // Email
+            // Notificação apenas para quem tem user válido
+            if (usuariosValidos.length > 0) {
+                await prisma.notification.createMany({
+                    data: usuariosValidos.map((u: { id: string; email: string }) => ({
+                        userId: u.id,
+                        type: 'SYSTEM' as const,
+                        title,
+                        content: message,
+                        link: '/dashboard',
+                    })),
+                });
+            }
+
+            // Email para todos independente de ter user
             await Promise.allSettled(
                 unique.map(u => sendComunicadoEmail(u.email, u.name, title, message))
             );
