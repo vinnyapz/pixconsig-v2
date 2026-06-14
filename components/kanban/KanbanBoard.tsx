@@ -73,6 +73,7 @@ function PrefeituraModal({ prefeitura, onClose }: { prefeitura: PrefeituraKanban
   const [msgSubject, setMsgSubject] = useState('');
   const [msgBody, setMsgBody] = useState('');
   const [sendingMsg, setSendingMsg] = useState(false);
+  const [msgTarget, setMsgTarget] = useState<'franqueado' | 'master' | 'ambos'>('franqueado');
   const { userType } = useAuth();
   const isAdmin = userType === 'admin' || userType === 'superadmin';
 
@@ -86,7 +87,7 @@ function PrefeituraModal({ prefeitura, onClose }: { prefeitura: PrefeituraKanban
       const res = await fetch('/api/mensagem-direta', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prefeituraId: prefeitura.id, subject: msgSubject, message: msgBody }),
+        body: JSON.stringify({ prefeituraId: prefeitura.id, subject: msgSubject, message: msgBody, target: msgTarget }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -98,6 +99,7 @@ function PrefeituraModal({ prefeitura, onClose }: { prefeitura: PrefeituraKanban
       setShowMsgModal(false);
       setMsgSubject('');
       setMsgBody('');
+      setMsgTarget('franqueado');
     } catch (e: any) {
       toast.error(e.message || 'Erro ao enviar mensagem');
     } finally {
@@ -257,6 +259,24 @@ function PrefeituraModal({ prefeitura, onClose }: { prefeitura: PrefeituraKanban
               </button>
             </div>
             <div className="space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-gray-700">Enviar para</label>
+                <div className="flex gap-2">
+                  {(['franqueado', 'master', 'ambos'] as const).map(t => (
+                    <button
+                      key={t}
+                      onClick={() => setMsgTarget(t)}
+                      className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                        msgTarget === t
+                          ? 'border-blue-500 bg-blue-50 text-blue-600'
+                          : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      {t === 'franqueado' ? '🏪 Franqueado' : t === 'master' ? '🏆 Master' : '👥 Ambos'}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-gray-700">Assunto</label>
                 <input

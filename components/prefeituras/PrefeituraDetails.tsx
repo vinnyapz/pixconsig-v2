@@ -70,6 +70,7 @@ export function PrefeituraDetails({
   const [msgSubject, setMsgSubject] = useState("");
   const [msgBody, setMsgBody] = useState("");
   const [sendingMsg, setSendingMsg] = useState(false);
+  const [msgTarget, setMsgTarget] = useState<"franqueado" | "master" | "ambos">("franqueado");
 
   const handleSendDirectMessage = async () => {
     if (!msgSubject.trim() || !msgBody.trim()) {
@@ -97,6 +98,7 @@ export function PrefeituraDetails({
       setShowMsgModal(false);
       setMsgSubject("");
       setMsgBody("");
+      setMsgTarget("franqueado");
     } catch (e: any) {
       toast.error(e.message || "Erro ao enviar mensagem");
     } finally {
@@ -320,6 +322,24 @@ export function PrefeituraDetails({
             </div>
 
             <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Enviar para</Label>
+                <div className="flex gap-2">
+                  {(["franqueado", "master", "ambos"] as const).map(t => (
+                    <button
+                      key={t}
+                      onClick={() => setMsgTarget(t)}
+                      className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                        msgTarget === t
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {t === "franqueado" ? "🏪 Franqueado" : t === "master" ? "🏆 Master" : "👥 Ambos"}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Assunto</Label>
                 <Input

@@ -11,7 +11,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 403 });
         }
 
-        const { prefeituraId, subject, message } = await request.json();
+        const { prefeituraId, subject, message, target = 'ambos' } = await request.json();
 
         if (!prefeituraId || !subject || !message) {
             return NextResponse.json({ error: 'Campos obrigatórios ausentes' }, { status: 400 });
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         const recipients: { name: string; email: string; role: string }[] = [];
 
         // Buscar Master responsável
-        if (prefeitura.masterId) {
+        if (prefeitura.masterId && (target === 'master' || target === 'ambos')) {
             const master = await prisma.master.findUnique({
                 where: { id: prefeitura.masterId },
                 select: { name: true, email: true },
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
         }
 
         // Buscar Franqueado responsável
-        if (prefeitura.franqueadoId) {
+        if (prefeitura.franqueadoId && (target === 'franqueado' || target === 'ambos')) {
             const franqueado = await prisma.franqueado.findUnique({
                 where: { id: prefeitura.franqueadoId },
                 select: { name: true, email: true },
