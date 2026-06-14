@@ -187,7 +187,7 @@ export async function getLoanChartData(
         });
     }
 
-    loans.forEach(loan => {
+    loans.forEach((loan: any) => {
         const d = new Date(loan.date);
         const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
         if (monthMap.has(key)) {
@@ -195,7 +195,7 @@ export async function getLoanChartData(
         }
     });
 
-    return Array.from(monthMap.values()).map(m => ({
+    return Array.from(monthMap.values()).map((m: any) => ({
         month: m.label,
         value: m.value
     }));
@@ -229,7 +229,7 @@ async function getAdminRankings(): Promise<RankingData> {
     });
 
     const loanRanking: RankingItem[] = await Promise.all(
-        masters.map(async (master) => {
+        masters.map(async (master: any) => {
             const loans = await prisma.loan.aggregate({
                 where: {
                     status: 'PAID',
@@ -248,19 +248,19 @@ async function getAdminRankings(): Promise<RankingData> {
             };
         })
     );
-    loanRanking.sort((a, b) => {
+    loanRanking.sort((a: any, b: any) => {
         const valA = parseFloat(a.value.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
         const valB = parseFloat(b.value.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
         return valB - valA;
     });
 
     const cityRanking: RankingItem[] = masters
-        .map(m => ({
+        .map((m: any) => ({
             id: m.id,
             name: `${m.name} (${m.state || 'N/A'})`,
             value: `${m._count.prefeituras} prefeituras`
         }))
-        .sort((a, b) => {
+        .sort((a: any, b: any) => {
             const countA = parseInt(a.value) || 0;
             const countB = parseInt(b.value) || 0;
             return countB - countA;
@@ -286,7 +286,7 @@ async function getMasterRankings(masterId: string): Promise<RankingData> {
     });
 
     const loanRanking: RankingItem[] = await Promise.all(
-        franqueados.map(async (franqueado) => {
+        franqueados.map(async (franqueado: any) => {
             const loans = await prisma.loan.aggregate({
                 where: {
                     status: 'PAID',
@@ -302,19 +302,19 @@ async function getMasterRankings(masterId: string): Promise<RankingData> {
             };
         })
     );
-    loanRanking.sort((a, b) => {
+    loanRanking.sort((a: any, b: any) => {
         const valA = parseFloat(a.value.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
         const valB = parseFloat(b.value.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
         return valB - valA;
     });
 
     const cityRanking: RankingItem[] = franqueados
-        .map(f => ({
+        .map((f: any) => ({
             id: f.id,
             name: f.name,
             value: `${f._count.prefeituras} prefeituras`
         }))
-        .sort((a, b) => {
+        .sort((a: any, b: any) => {
             const countA = parseInt(a.value) || 0;
             const countB = parseInt(b.value) || 0;
             return countB - countA;

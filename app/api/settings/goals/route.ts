@@ -33,24 +33,24 @@ export async function GET() {
 
         // Buscar todas as metas existentes no AppSetting
         const allGoalKeys = [
-            ...masters.map(m => `master_goal_prefeituras_${m.id}`),
-            ...franqueados.map(f => `franqueado_goal_prefeituras_${f.id}`)
+            ...masters.map((m: any) => `master_goal_prefeituras_${m.id}`),
+            ...franqueados.map((f: any) => `franqueado_goal_prefeituras_${f.id}`)
         ];
 
         const existingGoals = await prisma.appSetting.findMany({
             where: { key: { in: allGoalKeys } }
         });
-        const goalsMap = new Map(existingGoals.map(g => [g.key, parseInt(g.value)]));
+        const goalsMap = new Map(existingGoals.map((g: any) => [g.key, parseInt(g.value)]));
 
         const goals: GoalSettingItem[] = [
-            ...masters.map(m => ({
+            ...masters.map((m: any) => ({
                 entityId: m.id,
                 entityName: m.name,
                 entityType: 'master' as const,
                 goalPrefeituras: goalsMap.get(`master_goal_prefeituras_${m.id}`) || 100,
                 currentPrefeituras: m._count.prefeituras
             })),
-            ...franqueados.map(f => ({
+            ...franqueados.map((f: any) => ({
                 entityId: f.id,
                 entityName: f.name,
                 entityType: 'franqueado' as const,

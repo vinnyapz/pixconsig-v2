@@ -34,7 +34,7 @@ export async function GET(request: Request) {
             prefeituraIds: Set<string>;
         }>();
 
-        paidLoans.forEach(loan => {
+        paidLoans.forEach((loan: any) => {
             const st = loan.prefeitura.state;
             if (!stateMap.has(st)) {
                 stateMap.set(st, {
@@ -63,15 +63,15 @@ export async function GET(request: Request) {
                 prefeituras: data.prefeituraIds.size,
                 color: STATE_COLORS[index % STATE_COLORS.length],
             }))
-            .sort((a, b) => b.totalLoans - a.totalLoans);
+            .sort((a: any, b: any) => b.totalLoans - a.totalLoans);
 
         const response: RegionalReportResponse = {
             states,
             summary: {
-                totalLoans: states.reduce((s, x) => s + x.totalLoans, 0),
-                totalServidor: states.reduce((s, x) => s + x.servidorPublico, 0),
-                totalContratados: states.reduce((s, x) => s + x.contratados, 0),
-                totalPrefeituras: states.reduce((s, x) => s + x.prefeituras, 0),
+                totalLoans: states.reduce((s: any, x: any) => s + x.totalLoans, 0),
+                totalServidor: states.reduce((s: any, x: any) => s + x.servidorPublico, 0),
+                totalContratados: states.reduce((s: any, x: any) => s + x.contratados, 0),
+                totalPrefeituras: states.reduce((s: any, x: any) => s + x.prefeituras, 0),
             },
         };
 

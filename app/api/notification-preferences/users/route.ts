@@ -18,12 +18,12 @@ export async function GET(req: NextRequest) {
 
     // Buscar preferências de todos
     const prefs = await prisma.notificationPreference.findMany({
-      where: { userId: { in: users.map(u => u.id) } },
+      where: { userId: { in: users.map((u: any) => u.id) } },
     });
 
-    const prefsMap = Object.fromEntries(prefs.map(p => [p.userId, p]));
+    const prefsMap = Object.fromEntries(prefs.map((p: any) => [p.userId, p]));
 
-    return NextResponse.json(users.map(u => ({
+    return NextResponse.json(users.map((u: any) => ({
       ...u,
       preferences: prefsMap[u.id] || null,
     })));

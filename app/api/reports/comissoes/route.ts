@@ -95,7 +95,7 @@ export async function GET(request: Request) {
         let totalLoansValue = 0;
 
         // 8) Iterar sobre os empréstimos (loop principal)
-        paidLoans.forEach(loan => {
+        paidLoans.forEach((loan: any) => {
             const loanDate = new Date(loan.date);
             const key = period === 'monthly'
                 ? `${loanDate.getUTCFullYear()}-${String(loanDate.getUTCMonth() + 1).padStart(2, '0')}`
@@ -179,7 +179,7 @@ export async function GET(request: Request) {
         });
 
         const agents = Array.from(agentsMap.values())
-            .sort((a, b) => b.totalCommission - a.totalCommission);
+            .sort((a: any, b: any) => b.totalCommission - a.totalCommission);
 
         // 10) Montar resposta
         const response: ComissoesReportResponse = {
@@ -191,7 +191,7 @@ export async function GET(request: Request) {
             },
             history,
             agents,
-            availableStates: availableStatesResult.map(s => s.state),
+            availableStates: availableStatesResult.map((s: any) => s.state),
         };
 
         return NextResponse.json(response);

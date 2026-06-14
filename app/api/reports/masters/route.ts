@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 
         // Para cada master, calcular loans PAID atual e anterior
         const masterItems: MasterPerformanceItem[] = await Promise.all(
-            masters.map(async (master) => {
+            masters.map(async (master: any) => {
                 const [currentLoans, previousLoans] = await Promise.all([
                     prisma.loan.aggregate({
                         where: {
@@ -84,7 +84,7 @@ export async function GET(request: Request) {
         );
 
         // Ordenar por totalLoans desc
-        masterItems.sort((a, b) => b.totalLoans - a.totalLoans);
+        masterItems.sort((a: any, b: any) => b.totalLoans - a.totalLoans);
 
         // Buscar total geral de loans PAID para todos
         const totalAllLoans = await prisma.loan.aggregate({
@@ -97,8 +97,8 @@ export async function GET(request: Request) {
             summary: {
                 totalMasters: masters.length,
                 totalLoans: totalAllLoans._sum.amount || 0,
-                totalPrefeituras: masterItems.reduce((s, m) => s + m.prefeituraCount, 0),
-                totalFranqueados: masterItems.reduce((s, m) => s + m.franqueadoCount, 0),
+                totalPrefeituras: masterItems.reduce((s: any, m: any) => s + m.prefeituraCount, 0),
+                totalFranqueados: masterItems.reduce((s: any, m: any) => s + m.franqueadoCount, 0),
             },
         };
 

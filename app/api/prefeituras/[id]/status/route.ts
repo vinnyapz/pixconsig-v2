@@ -106,7 +106,7 @@ export async function PUT(
             });
 
             if (duplicates.length > 0) {
-                duplicateWarning = `Atenção: Prefeitura com mesmo CNPJ/Cidade já existe nas fases: ${duplicates.map(d => `${d.city} (${d.status})`).join(', ')}`;
+                duplicateWarning = `Atenção: Prefeitura com mesmo CNPJ/Cidade já existe nas fases: ${duplicates.map((d: any) => `${d.city} (${d.status})`).join(', ')}`;
             }
         }
 

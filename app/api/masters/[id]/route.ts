@@ -91,7 +91,7 @@ export async function DELETE(
         }
 
         // Transaction to delete both
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: any) => {
             // Delete Master
             await tx.master.delete({
                 where: { id }

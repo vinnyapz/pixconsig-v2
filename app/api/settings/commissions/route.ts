@@ -16,7 +16,7 @@ export async function GET() {
         };
 
         // Map database values to settings object
-        commissions.forEach((c) => {
+        commissions.forEach((c: any) => {
             if (c.loanType === 'SERVIDOR') {
                 if (c.userType === 'MASTER') settings.servidorPublicoMasterCommission = c.percentage;
                 if (c.userType === 'FRANQUEADO') settings.servidorPublicoFranqueadoCommission = c.percentage;
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
         }
 
         // Uses a transaction to update or create commission configurations one by one
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: any) => {
             const configs = [
                 { u: 'MASTER', l: 'SERVIDOR', v: servidorPublicoMasterCommission },
                 { u: 'FRANQUEADO', l: 'SERVIDOR', v: servidorPublicoFranqueadoCommission },

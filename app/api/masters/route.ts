@@ -87,7 +87,7 @@ export async function POST(request: Request) {
         const hashedPassword = await hashPassword(password);
 
         // Transaction to ensure both or neither are created
-        const result = await prisma.$transaction(async (tx) => {
+        const result = await prisma.$transaction(async (tx: any) => {
             // Create Master
             const master = await tx.master.create({
                 data: {

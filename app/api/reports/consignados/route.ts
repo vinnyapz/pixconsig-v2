@@ -60,8 +60,8 @@ export async function GET(request: Request) {
         ]);
 
         // 3) Separar loans do período atual e do período anterior
-        const currentPeriodLoans = allLoans.filter(l => new Date(l.date) >= startDate);
-        const previousPeriodLoans = allLoans.filter(l => {
+        const currentPeriodLoans = allLoans.filter((l: any) => new Date(l.date) >= startDate);
+        const previousPeriodLoans = allLoans.filter((l: any) => {
             const d = new Date(l.date);
             return d < startDate && l.status === 'PAID';
         });
@@ -88,7 +88,7 @@ export async function GET(request: Request) {
             }
         }
 
-        currentPeriodLoans.forEach(loan => {
+        currentPeriodLoans.forEach((loan: any) => {
             const loanDate = new Date(loan.date);
             let key = '';
 
@@ -134,18 +134,18 @@ export async function GET(request: Request) {
         });
 
         // 5) Calcular totais realizados (PAID)
-        const totalServidorPublico = evolution.reduce((acc, curr) => acc + curr.servidorPublico, 0);
-        const totalContratados = evolution.reduce((acc, curr) => acc + curr.contratados, 0);
+        const totalServidorPublico = evolution.reduce((acc: any, curr: any) => acc + curr.servidorPublico, 0);
+        const totalContratados = evolution.reduce((acc: any, curr: any) => acc + curr.contratados, 0);
         const totalGeral = totalServidorPublico + totalContratados;
 
         // 6) Calcular variações usando os loans do período anterior (já filtrados)
         const prevTotalServidorPublico = previousPeriodLoans
-            .filter(l => l.type === 'SERVIDOR')
-            .reduce((sum, l) => sum + l.amount, 0);
+            .filter((l: any) => l.type === 'SERVIDOR')
+            .reduce((sum: any, l: any) => sum + l.amount, 0);
 
         const prevTotalContratados = previousPeriodLoans
-            .filter(l => l.type === 'CONTRATADO')
-            .reduce((sum, l) => sum + l.amount, 0);
+            .filter((l: any) => l.type === 'CONTRATADO')
+            .reduce((sum: any, l: any) => sum + l.amount, 0);
 
         const prevTotalGeral = prevTotalServidorPublico + prevTotalContratados;
 
@@ -195,7 +195,7 @@ export async function GET(request: Request) {
                 { name: "Contratados", value: totalContratados, color: "#10B981" },
             ],
             currentMonth: currentMonthInfo,
-            availableStates: availableStatesResult.map(s => s.state),
+            availableStates: availableStatesResult.map((s: any) => s.state),
         };
 
         return NextResponse.json(response);

@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
         });
 
         // Get status from User table since Franqueado table doesn't have it
-        const emails = franqueadosDB.map(f => f.email);
+        const emails = franqueadosDB.map((f: any) => f.email);
         const users = await prisma.user.findMany({
             where: {
                 email: {
@@ -69,11 +69,11 @@ export async function GET(request: NextRequest) {
             }
         });
 
-        const userStatusMap = new Map(users.map(u => [u.email.toLowerCase(), u.status]));
+        const userStatusMap = new Map(users.map((u: any) => [u.email.toLowerCase(), u.status]));
 
-        const franqueados = franqueadosDB.map(f => {
-            const loanAmount = f.prefeituras.reduce((acc, p) => {
-                return acc + p.loans.filter(l => l.status === 'PAID').reduce((lAcc, l) => lAcc + l.amount, 0);
+        const franqueados = franqueadosDB.map((f: any) => {
+            const loanAmount = f.prefeituras.reduce((acc: any, p: any) => {
+                return acc + p.loans.filter((l: any) => l.status === 'PAID').reduce((lAcc: any, l: any) => lAcc + l.amount, 0);
             }, 0);
 
             const userStatus = userStatusMap.get(f.email.toLowerCase());
