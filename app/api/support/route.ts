@@ -25,6 +25,9 @@ export async function GET(req: NextRequest) {
                 orderBy: { createdAt: 'asc' },
             });
 
+            console.log('[SUPPORT GET] total:', messages.length);
+            if (messages.length > 0) console.log('[SUPPORT GET] primeiro msg keys:', Object.keys(messages[0]));
+            if (messages.length > 0) console.log('[SUPPORT GET] primeiro msg attachment_url:', (messages[0] as any).attachment_url, 'attachmentUrl:', (messages[0] as any).attachmentUrl);
             // Marcar mensagens do usuário como lidas
             await (prisma as any).supportMessage.updateMany({
                 where: { senderId: withUserId, recipientId: session.id, read: false },
@@ -114,6 +117,8 @@ export async function GET(req: NextRequest) {
                 },
                 orderBy: { createdAt: 'asc' },
             });
+            console.log('[SUPPORT GET USER] total:', messages.length);
+            if (messages.length > 0) console.log('[SUPPORT GET USER] keys:', Object.keys(messages[0]), 'attachment_url:', (messages[0] as any).attachment_url);
 
             // Marcar mensagens do admin como lidas
             await (prisma as any).supportMessage.updateMany({
@@ -180,7 +185,7 @@ export async function POST(req: NextRequest) {
             },
         });
 
-        console.log('[SUPPORT] mensagem criada:', message.id);
+        console.log('[SUPPORT] mensagem criada:', message.id, 'attachment_url:', (message as any).attachment_url, 'attachmentUrl:', (message as any).attachmentUrl);
         return NextResponse.json(message);
     } catch (error) {
         console.error('[SUPPORT POST ERROR]:', error);
