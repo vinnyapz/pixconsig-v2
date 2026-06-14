@@ -119,8 +119,8 @@ export async function POST(req: NextRequest) {
         const session = await getServerSession();
         if (!session) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
 
-        const { content, recipientId } = await req.json();
-        if (!content?.trim()) return NextResponse.json({ error: 'Mensagem vazia' }, { status: 400 });
+        const { content, recipientId, attachmentUrl, attachmentName, attachmentType } = await req.json();
+        if (!content?.trim() && !attachmentUrl) return NextResponse.json({ error: 'Mensagem ou anexo obrigatório' }, { status: 400 });
 
         const isAdmin = isAdminType(session.type);
 
@@ -138,12 +138,15 @@ export async function POST(req: NextRequest) {
 
         const message = await (prisma as any).supportMessage.create({
             data: {
-                content: content.trim(),
+                content: content?.trim() || '',
                 senderType: isAdmin ? 'admin' : 'user',
                 senderId: session.id,
                 senderName: (session as any).name || session.email,
                 recipientId: targetRecipientId,
                 read: false,
+                attachmentUrl: attachmentUrl || null,
+                attachmentName: attachmentName || null,
+                attachmentType: attachmentType || null,
             },
         });
 

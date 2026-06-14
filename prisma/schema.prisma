@@ -320,6 +320,9 @@ model SupportMessage {
   senderName  String
   recipientId String   // userId do outro lado
   read        Boolean  @default(false)
+  attachmentUrl  String?
+  attachmentName String?
+  attachmentType String?
   createdAt   DateTime @default(now())
 
   @@map("support_messages")

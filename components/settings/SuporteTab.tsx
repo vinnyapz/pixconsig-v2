@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { MessageCircle, Send, Loader2, ArrowLeft, Users } from "lucide-react";
+import { MessageCircle, Send, Loader2, ArrowLeft, Users, Paperclip, FileText, Download } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,9 @@ interface Message {
   content: string;
   senderType: "user" | "admin";
   senderName: string;
+  attachmentUrl?: string;
+  attachmentName?: string;
+  attachmentType?: string;
   createdAt: string;
 }
 
@@ -34,7 +38,9 @@ export function SuporteTab() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -79,6 +85,27 @@ export function SuporteTab() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedUser) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/support/upload', { method: 'POST', body: formData });
+      if (!res.ok) { const data = await res.json(); toast.error(data.error || 'Erro ao enviar'); return; }
+      const { url, name, type } = await res.json();
+      await fetch('/api/support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: '', recipientId: selectedUser.userId, attachmentUrl: url, attachmentName: name, attachmentType: type }),
+      });
+      await fetchMessages(selectedUser.userId);
+      await fetchConversations();
+    } catch { toast.error('Erro ao enviar arquivo'); }
+    finally { setUploading(false); e.target.value = ''; }
+  };
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reply.trim() || !selectedUser || sending) return;
@@ -88,7 +115,7 @@ export function SuporteTab() {
       const res = await fetch('/api/support', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: reply, recipientId: selectedUser.userId }),
+        body: JSON.stringify({ content: reply, recipientId: selectedUser.userId, attachmentUrl: undefined, attachmentName: undefined, attachmentType: undefined }),
       });
       if (res.ok) {
         setReply('');
@@ -193,7 +220,23 @@ export function SuporteTab() {
                       {msg.senderType === 'user' && (
                         <p className="text-xs font-semibold mb-1 text-primary">{msg.senderName}</p>
                       )}
-                      <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                      {msg.attachmentUrl && (
+                        <div className="mb-1.5">
+                          {msg.attachmentType?.startsWith('image/') ? (
+                            <a href={msg.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                              <img src={msg.attachmentUrl} alt={msg.attachmentName} className="rounded-lg max-w-full max-h-40 object-cover" />
+                            </a>
+                          ) : (
+                            <a href={msg.attachmentUrl} target="_blank" rel="noopener noreferrer"
+                              className={`flex items-center gap-2 p-2 rounded-lg border text-xs ${msg.senderType === 'admin' ? 'border-white/30 bg-white/10' : 'border-gray-200 bg-gray-50'}`}>
+                              <FileText className="h-3.5 w-3.5 shrink-0" />
+                              <span className="truncate">{msg.attachmentName}</span>
+                              <Download className="h-3 w-3 shrink-0 ml-auto" />
+                            </a>
+                          )}
+                        </div>
+                      )}
+                      {msg.content && <p className="whitespace-pre-wrap break-words">{msg.content}</p>}
                       <p className={`text-[10px] mt-1 ${msg.senderType === 'admin' ? 'text-white/70' : 'text-gray-400'}`}>
                         {formatTime(msg.createdAt)}
                       </p>
@@ -206,17 +249,22 @@ export function SuporteTab() {
               {/* Input de resposta */}
               <form onSubmit={handleSend} className="p-3 border-t bg-white">
                 <div className="flex gap-2">
+                  <button type="button" onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading} className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors disabled:opacity-50">
+                    {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+                  </button>
                   <Input
                     value={reply}
                     onChange={e => setReply(e.target.value)}
                     placeholder={`Responder para ${selectedUser.userName}...`}
-                    disabled={sending}
+                    disabled={sending || uploading}
                     className="flex-1 rounded-xl text-sm"
                     autoFocus
                   />
-                  <Button type="submit" disabled={!reply.trim() || sending} size="icon" className="rounded-xl shrink-0">
+                  <Button type="submit" disabled={!reply.trim() || sending || uploading} size="icon" className="rounded-xl shrink-0">
                     {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                   </Button>
+                  <input ref={fileInputRef} type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" className="hidden" onChange={handleFileUpload} />
                 </div>
               </form>
             </>
