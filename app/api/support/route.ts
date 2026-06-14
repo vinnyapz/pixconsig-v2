@@ -154,6 +154,7 @@ export async function POST(req: NextRequest) {
             targetRecipientId = admin.id;
         }
 
+        console.log('[SUPPORT] criando mensagem para recipientId:', targetRecipientId);
         const message = await (prisma as any).supportMessage.create({
             data: {
                 content: content?.trim() || '',
@@ -179,9 +180,10 @@ export async function POST(req: NextRequest) {
             },
         });
 
+        console.log('[SUPPORT] mensagem criada:', message.id);
         return NextResponse.json(message);
     } catch (error) {
-        console.error('Support POST error:', error);
+        console.error('[SUPPORT POST ERROR]:', error);
         return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
     }
 }
