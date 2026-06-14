@@ -13,25 +13,34 @@ export async function GET(req: NextRequest) {
         const isAdmin = isAdminType(session.type);
 
         if (isAdmin && withUserId) {
+            // Buscar TODAS as mensagens desse usuário (com qualquer admin)
             const messages = await (prisma as any).supportMessage.findMany({
                 where: {
                     OR: [
-                        { senderId: session.id, recipientId: withUserId },
-                        { senderId: withUserId, recipientId: session.id },
+                        { senderId: withUserId },
+                        { recipientId: withUserId },
                     ],
                 },
                 orderBy: { createdAt: 'asc' },
             });
 
+            // Marcar mensagens do usuário como lidas
             await (prisma as any).supportMessage.updateMany({
-                where: { senderId: withUserId, recipientId: session.id, read: false },
+                where: { senderId: withUserId, senderType: 'user', read: false },
                 data: { read: true },
             });
 
             return NextResponse.json(messages);
 
         } else if (isAdmin) {
+            // Admin vê TODAS as mensagens de usuários (independente de qual admin foi o destinatário)
             const messages = await (prisma as any).supportMessage.findMany({
+                where: {
+                    OR: [
+                        { senderType: 'user' },
+                        { senderType: 'admin' },
+                    ]
+                },
                 orderBy: { createdAt: 'desc' },
             });
 
