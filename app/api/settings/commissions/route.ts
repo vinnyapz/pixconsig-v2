@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/jwt';
-import { UserType, LoanType } from '@prisma/client';
 
 export async function GET() {
     try {
@@ -18,12 +17,12 @@ export async function GET() {
 
         // Map database values to settings object
         commissions.forEach((c) => {
-            if (c.loanType === LoanType.SERVIDOR) {
-                if (c.userType === UserType.MASTER) settings.servidorPublicoMasterCommission = c.percentage;
-                if (c.userType === UserType.FRANQUEADO) settings.servidorPublicoFranqueadoCommission = c.percentage;
-            } else if (c.loanType === LoanType.CONTRATADO) {
-                if (c.userType === UserType.MASTER) settings.contratadoMasterCommission = c.percentage;
-                if (c.userType === UserType.FRANQUEADO) settings.contratadoFranqueadoCommission = c.percentage;
+            if (c.loanType === 'SERVIDOR') {
+                if (c.userType === 'MASTER') settings.servidorPublicoMasterCommission = c.percentage;
+                if (c.userType === 'FRANQUEADO') settings.servidorPublicoFranqueadoCommission = c.percentage;
+            } else if (c.loanType === 'CONTRATADO') {
+                if (c.userType === 'MASTER') settings.contratadoMasterCommission = c.percentage;
+                if (c.userType === 'FRANQUEADO') settings.contratadoFranqueadoCommission = c.percentage;
             }
         });
 
@@ -73,10 +72,10 @@ export async function POST(req: Request) {
         // Uses a transaction to update or create commission configurations one by one
         await prisma.$transaction(async (tx) => {
             const configs = [
-                { u: UserType.MASTER, l: LoanType.SERVIDOR, v: servidorPublicoMasterCommission },
-                { u: UserType.FRANQUEADO, l: LoanType.SERVIDOR, v: servidorPublicoFranqueadoCommission },
-                { u: UserType.MASTER, l: LoanType.CONTRATADO, v: contratadoMasterCommission },
-                { u: UserType.FRANQUEADO, l: LoanType.CONTRATADO, v: contratadoFranqueadoCommission },
+                { u: 'MASTER', l: 'SERVIDOR', v: servidorPublicoMasterCommission },
+                { u: 'FRANQUEADO', l: 'SERVIDOR', v: servidorPublicoFranqueadoCommission },
+                { u: 'MASTER', l: 'CONTRATADO', v: contratadoMasterCommission },
+                { u: 'FRANQUEADO', l: 'CONTRATADO', v: contratadoFranqueadoCommission },
             ];
 
             for (const config of configs) {

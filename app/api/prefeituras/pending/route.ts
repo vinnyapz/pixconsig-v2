@@ -2,7 +2,6 @@ import { isAdminType } from '@/lib/auth-helpers';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession, getCurrentFranqueadoId, getCurrentMasterId } from '@/lib/auth-server';
-import { PrefeituraStatus } from '@prisma/client';
 
 export async function GET() {
     try {
@@ -17,7 +16,7 @@ export async function GET() {
             count = await prisma.prefeitura.count({
                 where: {
                     status: {
-                        in: [PrefeituraStatus.AGUARDANDO_ANALISE, PrefeituraStatus.PROCESSO_EM_ANDAMENTO]
+                        in: ['AGUARDANDO_ANALISE', 'PROCESSO_EM_ANDAMENTO']
                     }
                 }
             });
@@ -26,7 +25,7 @@ export async function GET() {
             if (masterId) {
                 count = await prisma.prefeitura.count({
                     where: {
-                        status: PrefeituraStatus.AGUARDANDO_DECRETO,
+                        status: 'AGUARDANDO_DECRETO',
                         masterId: masterId
                     }
                 });
@@ -36,7 +35,7 @@ export async function GET() {
             if (franqueadoId) {
                 count = await prisma.prefeitura.count({
                     where: {
-                        status: PrefeituraStatus.AGUARDANDO_DECRETO,
+                        status: 'AGUARDANDO_DECRETO',
                         franqueadoId: franqueadoId
                     }
                 });
