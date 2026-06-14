@@ -10,7 +10,7 @@ import fs from 'fs';
 import path from 'path';
 import { randomUUID } from 'crypto';
 
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'suporte');
+const BASE_UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'suporte');
 
 export async function POST(req: NextRequest) {
     try {
@@ -39,6 +39,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Arquivo muito grande. Máximo 20MB.' }, { status: 400 });
         }
 
+        // Subpasta por usuário (usando os primeiros 8 chars do ID para não expor o ID completo)
+        const userFolder = session.id.substring(0, 8);
+        const UPLOAD_DIR = path.join(BASE_UPLOAD_DIR, userFolder);
+
         if (!fs.existsSync(UPLOAD_DIR)) {
             fs.mkdirSync(UPLOAD_DIR, { recursive: true });
         }
@@ -54,7 +58,7 @@ export async function POST(req: NextRequest) {
         const isImage = file.type.startsWith('image/');
 
         return NextResponse.json({
-            url: `${baseUrl}/api/uploads/suporte/${filename}`,
+            url: `${baseUrl}/api/uploads/suporte/${userFolder}/${filename}`,
             name: file.name,
             type: file.type,
             isImage,

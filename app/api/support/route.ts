@@ -86,6 +86,7 @@ export async function GET(req: NextRequest) {
             ));
 
         } else {
+            // Usuário comum (master, franqueado) OU admin vendo suas mensagens
             const messages = await (prisma as any).supportMessage.findMany({
                 where: {
                     OR: [
@@ -96,8 +97,9 @@ export async function GET(req: NextRequest) {
                 orderBy: { createdAt: 'asc' },
             });
 
+            // Marcar mensagens recebidas como lidas
             await (prisma as any).supportMessage.updateMany({
-                where: { recipientId: session.id, senderType: 'admin', read: false },
+                where: { recipientId: session.id, read: false },
                 data: { read: true },
             });
 
@@ -122,12 +124,21 @@ export async function POST(req: NextRequest) {
         let targetRecipientId = recipientId;
 
         if (!isAdmin) {
+            // Usuário comum fala com Admin
             const admin = await prisma.user.findFirst({
                 where: { type: { in: ['ADMIN', 'SUPERADMIN'] }, status: 'ACTIVE' },
                 select: { id: true, name: true },
             });
             if (!admin) return NextResponse.json({ error: 'Nenhum admin disponível' }, { status: 404 });
             targetRecipientId = admin.id;
+        } else if (session.type === 'admin') {
+            // Admin fala com SuperAdmin
+            const superAdmin = await prisma.user.findFirst({
+                where: { type: 'SUPERADMIN', status: 'ACTIVE' },
+                select: { id: true, name: true },
+            });
+            if (!superAdmin) return NextResponse.json({ error: 'Nenhum SuperAdmin disponível' }, { status: 404 });
+            targetRecipientId = superAdmin.id;
         }
 
         const message = await (prisma as any).supportMessage.create({

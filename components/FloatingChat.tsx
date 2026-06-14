@@ -57,7 +57,7 @@ export function FloatingChat({ userType: propUserType, userName = "Usuário" }: 
   }, [isOpen]);
 
   useEffect(() => {
-    if (isAuthenticated && userType && userType !== 'admin' && userType !== 'superadmin') {
+    if (isAuthenticated && userType && userType !== 'superadmin') {
       fetchMessages();
       const interval = setInterval(fetchMessages, 5000);
       return () => clearInterval(interval);
@@ -131,7 +131,7 @@ export function FloatingChat({ userType: propUserType, userName = "Usuário" }: 
   const formatTime = (ts: string) =>
     new Date(ts).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
-  if (!isAuthenticated || userType === 'admin' || userType === 'superadmin') return null;
+  if (!isAuthenticated || userType === 'superadmin') return null;
 
   return (
     <>
