@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Save, Bot, Users, Briefcase, Loader2, UserCog, Settings2, Target, Bell, Megaphone, Shield } from "lucide-react";
+import { Save, Bot, Users, Briefcase, Loader2, UserCog, Settings2, Target, Bell, Megaphone, Shield, MessageCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,10 @@ import { GoalsTab } from "@/components/settings/GoalsTab";
 import { NotificationsTab } from "@/components/settings/NotificationsTab";
 import { SuperAdminTab } from "@/components/settings/SuperAdminTab";
 import { ComunicadosTab } from "@/components/settings/ComunicadosTab";
+import { SuporteTab } from "@/components/settings/SuporteTab";
 import { toast } from "sonner";
 
-type TabId = "commissions" | "ai" | "users" | "goals" | "notifications" | "superadmin" | "comunicados";
+type TabId = "commissions" | "ai" | "users" | "goals" | "notifications" | "superadmin" | "comunicados" | "suporte";
 
 const NewBadge = () => (
   <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-green-100 text-green-700 border border-green-200 leading-none">novo</span>
@@ -106,6 +107,7 @@ export function SettingsContent() {
     { id: "users" as TabId, label: "Usuários", icon: <UserCog className="h-4 w-4 shrink-0" />, show: true },
     { id: "goals" as TabId, label: "Metas", icon: <Target className="h-4 w-4 shrink-0" />, show: userType === "admin" || userType === "superadmin" },
     { id: "comunicados" as TabId, label: "Comunicados", icon: <Megaphone className="h-4 w-4 shrink-0" />, show: userType === "admin" || userType === "superadmin" || userType === "master", isNew: true },
+    { id: "suporte" as TabId, label: "Suporte", icon: <MessageCircle className="h-4 w-4 shrink-0" />, show: userType === "admin" || userType === "superadmin", isNew: true },
     { id: "notifications" as TabId, label: "Notificações", icon: <Bell className="h-4 w-4 shrink-0" />, show: true, isNew: true },
     { id: "superadmin" as TabId, label: "SuperAdmin", icon: <Shield className="h-4 w-4 shrink-0 text-yellow-600" />, show: userType === "superadmin", isNew: true, isSpecial: true },
   ].filter(t => t.show);
@@ -202,6 +204,7 @@ export function SettingsContent() {
     notifications: <NotificationsTab />,
     superadmin: <SuperAdminTab />,
     comunicados: <ComunicadosTab />,
+    suporte: <SuporteTab />,
   };
 
   return (

@@ -311,3 +311,16 @@ model Comunicado {
 
   @@map("comunicados")
 }
+
+model SupportMessage {
+  id          String   @id @default(uuid())
+  content     String
+  senderType  String   // 'user' | 'admin'
+  senderId    String
+  senderName  String
+  recipientId String   // userId do outro lado
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@map("support_messages")
+}
