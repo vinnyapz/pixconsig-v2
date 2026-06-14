@@ -43,7 +43,7 @@ export async function POST(request: Request) {
         fs.writeFileSync(filepath, buffer);
 
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://v2.pixconsig.com.br';
-        const url = `${baseUrl}/uploads/comunicados/${filename}`;
+        const url = `${baseUrl}/api/uploads/comunicados/${filename}`;
 
         return NextResponse.json({ url });
     } catch (error) {
