@@ -6,7 +6,7 @@ const FROM = 'PixConsig <noreply@pixconsig.com.br>';
 export async function sendPasswordResetEmail(email: string, token: string) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:2602';
   const resetLink = `${baseUrl}/reset-password?token=${token}`;
-  const logoUrl = `${baseUrl}/logo-grupo.jpg`;
+  const logoUrl = `${baseUrl}/api/uploads/logo-grupo.jpg`;
 
   const html = `
     <!DOCTYPE html>
@@ -51,7 +51,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
 export async function sendWelcomeEmail(email: string, pass: string) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:2602';
   const loginLink = `${baseUrl}/login`;
-  const logoUrl = `${baseUrl}/logo-grupo.jpg`;
+  const logoUrl = `${baseUrl}/api/uploads/logo-grupo.jpg`;
 
   const html = `
     <!DOCTYPE html>
@@ -98,7 +98,7 @@ export async function sendWelcomeEmail(email: string, pass: string) {
 
 export async function sendNotificationEmail(to: string, title: string, content: string, link: string) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:2602';
-  const logoUrl = `${baseUrl}/logo-grupo.jpg`;
+  const logoUrl = `${baseUrl}/api/uploads/logo-grupo.jpg`;
   const fullLink = `${baseUrl}${link}`;
 
   const html = `
@@ -138,7 +138,7 @@ export async function sendNotificationEmail(to: string, title: string, content: 
 
 export async function sendComunicadoEmail(email: string, name: string, title: string, message: string) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:2602';
-  const logoUrl = `${baseUrl}/logo-grupo.jpg`;
+  const logoUrl = `${baseUrl}/api/uploads/logo-grupo.jpg`;
   const loginLink = `${baseUrl}/dashboard`;
 
   const html = `
