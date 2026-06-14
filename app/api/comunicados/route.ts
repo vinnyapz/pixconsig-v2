@@ -157,12 +157,14 @@ export async function POST(request: Request) {
 
             // Notificação apenas para quem tem user válido
             if (usuariosValidos.length > 0) {
+                // Remover HTML do conteúdo para exibição na notificação
+                const plainContent = message.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 150);
                 await prisma.notification.createMany({
                     data: usuariosValidos.map((u: { id: string; email: string }) => ({
                         userId: u.id,
                         type: 'SYSTEM' as const,
-                        title,
-                        content: message,
+                        title: `📢 ${title}`,
+                        content: `__COMUNICADO__${message}`,
                         link: '/dashboard',
                     })),
                 });
