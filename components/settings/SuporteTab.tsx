@@ -42,7 +42,6 @@ export function SuporteTab() {
   const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const pollRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -69,17 +68,22 @@ export function SuporteTab() {
 
   useEffect(() => {
     fetchConversations();
-    pollRef.current = setInterval(fetchConversations, 5000);
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+    const interval = setInterval(async () => {
+      await fetchConversations();
+    }, 3000);
+    return () => clearInterval(interval);
   }, [fetchConversations]);
 
   useEffect(() => {
     if (selectedUser) {
       fetchMessages(selectedUser.userId);
-      const interval = setInterval(() => fetchMessages(selectedUser.userId), 3000);
+      const interval = setInterval(() => {
+        fetchMessages(selectedUser.userId);
+        fetchConversations();
+      }, 3000);
       return () => clearInterval(interval);
     }
-  }, [selectedUser, fetchMessages]);
+  }, [selectedUser, fetchMessages, fetchConversations]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
