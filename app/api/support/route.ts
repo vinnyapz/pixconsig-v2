@@ -135,7 +135,9 @@ export async function POST(req: NextRequest) {
         const session = await getServerSession();
         if (!session) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
 
-        const { content, recipientId, attachmentUrl, attachmentName, attachmentType } = await req.json();
+        const body = await req.json();
+        const { content, recipientId, attachmentUrl, attachmentName, attachmentType } = body;
+        console.log('[SUPPORT POST] body:', JSON.stringify(body));
         if (!content?.trim() && !attachmentUrl) return NextResponse.json({ error: 'Mensagem ou anexo obrigatório' }, { status: 400 });
 
         const isAdmin = isAdminType(session.type);
