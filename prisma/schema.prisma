@@ -323,6 +323,8 @@ model SupportMessage {
   attachmentUrl  String?  @map("attachment_url")
   attachmentName String?  @map("attachment_name")
   attachmentType String?  @map("attachment_type")
+  pinned      Boolean  @default(false)
+  pinnedAt    DateTime? @map("pinned_at")
   createdAt   DateTime @default(now())
 
   @@map("support_messages")

@@ -75,6 +75,22 @@ export async function GET(req: NextRequest) {
                 }
             }
 
+            // Calcular tempos de resposta para cada conversa
+            for (const conv of conversations) {
+                const msgs = messages.filter((m: any) => {
+                    const otherId = m.senderType === 'user' ? m.senderId : m.recipientId;
+                    return otherId === conv.userId;
+                });
+
+                // Última mensagem do usuário
+                const lastUserMsg = [...msgs].reverse().find((m: any) => m.senderType === 'user');
+                // Última mensagem do admin
+                const lastAdminMsg = [...msgs].reverse().find((m: any) => m.senderType === 'admin');
+
+                conv.lastUserMessageAt = lastUserMsg?.createdAt || null;
+                conv.lastAdminMessageAt = lastAdminMsg?.createdAt || null;
+            }
+
             return NextResponse.json(conversations.sort((a: any, b: any) =>
                 new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
             ));

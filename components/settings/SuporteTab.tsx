@@ -1,10 +1,10 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { MessageCircle, Send, Loader2, ArrowLeft, Users, Paperclip, FileText, Download } from "lucide-react";
-import { toast } from "sonner";
+import { MessageCircle, Send, Loader2, ArrowLeft, Users, Paperclip, FileText, Download, Pin, PinOff, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 interface Conversation {
   userId: string;
@@ -13,6 +13,8 @@ interface Conversation {
   userEmail: string;
   lastMessage: string;
   lastMessageAt: string;
+  lastUserMessageAt: string | null;
+  lastAdminMessageAt: string | null;
   unread: number;
 }
 
@@ -24,6 +26,7 @@ interface Message {
   attachmentUrl?: string;
   attachmentName?: string;
   attachmentType?: string;
+  pinned?: boolean;
   createdAt: string;
 }
 
@@ -31,6 +34,45 @@ const typeLabel: Record<string, string> = {
   MASTER: '🏆 Master',
   FRANQUEADO: '🏪 Franqueado',
 };
+
+function timeSince(dateStr: string | null): string | null {
+  if (!dateStr) return null;
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return 'agora';
+  if (diffMins < 60) return `${diffMins}min`;
+  if (diffHours < 24) return `${diffHours}h`;
+  return `${diffDays}d`;
+}
+
+function ResponseTimers({ conv }: { conv: Conversation }) {
+  const waitingAdmin = conv.lastUserMessageAt &&
+    (!conv.lastAdminMessageAt || new Date(conv.lastUserMessageAt) > new Date(conv.lastAdminMessageAt));
+  const waitingUser = conv.lastAdminMessageAt &&
+    (!conv.lastUserMessageAt || new Date(conv.lastAdminMessageAt) > new Date(conv.lastUserMessageAt));
+
+  return (
+    <div className="flex flex-col gap-0.5 mt-1">
+      {waitingAdmin && conv.lastUserMessageAt && (
+        <span className="flex items-center gap-1 text-[10px] text-orange-500 font-medium">
+          <Clock className="h-2.5 w-2.5" />
+          Aguardando sua resposta há {timeSince(conv.lastUserMessageAt)}
+        </span>
+      )}
+      {waitingUser && conv.lastAdminMessageAt && (
+        <span className="flex items-center gap-1 text-[10px] text-gray-400">
+          <Clock className="h-2.5 w-2.5" />
+          Usuário sem responder há {timeSince(conv.lastAdminMessageAt)}
+        </span>
+      )}
+    </div>
+  );
+}
 
 export function SuporteTab() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -40,8 +82,9 @@ export function SuporteTab() {
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [hoveredMsg, setHoveredMsg] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -58,19 +101,19 @@ export function SuporteTab() {
     try {
       const res = await fetch(`/api/support?userId=${userId}`);
       if (res.ok) {
-        setMessages(await res.json());
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        const data = await res.json();
+        // Fixadas no topo, resto por data
+        const pinned = data.filter((m: Message) => m.pinned);
+        const rest = data.filter((m: Message) => !m.pinned);
+        setMessages([...pinned, ...rest]);
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
       }
-    } catch (e) {
-      console.error('Erro ao buscar mensagens:', e);
-    }
+    } catch (e) {}
   }, []);
 
   useEffect(() => {
     fetchConversations();
-    const interval = setInterval(async () => {
-      await fetchConversations();
-    }, 3000);
+    const interval = setInterval(fetchConversations, 3000);
     return () => clearInterval(interval);
   }, [fetchConversations]);
 
@@ -113,28 +156,41 @@ export function SuporteTab() {
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reply.trim() || !selectedUser || sending) return;
-
     setSending(true);
     try {
       const res = await fetch('/api/support', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: reply, recipientId: selectedUser.userId, attachmentUrl: undefined, attachmentName: undefined, attachmentType: undefined }),
+        body: JSON.stringify({ content: reply, recipientId: selectedUser.userId }),
       });
       if (res.ok) {
         setReply('');
         await fetchMessages(selectedUser.userId);
         await fetchConversations();
       }
-    } catch (e) {
-      console.error('Erro ao enviar:', e);
-    } finally {
-      setSending(false);
-    }
+    } catch { toast.error('Erro ao enviar'); }
+    finally { setSending(false); }
+  };
+
+  const handlePin = async (msg: Message) => {
+    try {
+      const res = await fetch('/api/support/pin', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId: msg.id, pinned: !msg.pinned }),
+      });
+      if (res.ok) {
+        toast.success(msg.pinned ? 'Mensagem desafixada' : 'Mensagem fixada no topo!');
+        if (selectedUser) await fetchMessages(selectedUser.userId);
+      }
+    } catch { toast.error('Erro ao fixar mensagem'); }
   };
 
   const formatTime = (ts: string) =>
     new Date(ts).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+  const pinnedMessages = messages.filter(m => m.pinned);
+  const regularMessages = messages.filter(m => !m.pinned);
 
   return (
     <div className="rounded-xl border bg-card shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -146,7 +202,6 @@ export function SuporteTab() {
             <Users className="h-4 w-4 text-muted-foreground" />
             <h3 className="font-semibold text-sm">Conversas</h3>
           </div>
-
           <div className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="flex justify-center items-center h-32">
@@ -157,38 +212,32 @@ export function SuporteTab() {
                 <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-30" />
                 <p>Nenhuma conversa ainda.</p>
               </div>
-            ) : (
-              conversations.map(conv => (
-                <button
-                  key={conv.userId}
-                  onClick={() => setSelectedUser(conv)}
-                  className={`w-full text-left p-4 border-b hover:bg-muted/50 transition-colors ${
-                    selectedUser?.userId === conv.userId ? 'bg-primary/5 border-l-2 border-l-primary' : ''
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="font-medium text-sm truncate">{conv.userName}</p>
-                      <p className="text-xs text-muted-foreground">{typeLabel[conv.userType] || conv.userType}</p>
-                      <p className="text-xs text-muted-foreground truncate mt-1">{conv.lastMessage}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1 shrink-0">
-                      <p className="text-[10px] text-muted-foreground">{formatTime(conv.lastMessageAt)}</p>
-                      {conv.unread > 0 && (
-                        <span className="bg-primary text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
-                          {conv.unread}
-                        </span>
-                      )}
-                    </div>
+            ) : conversations.map(conv => (
+              <button key={conv.userId} onClick={() => setSelectedUser(conv)}
+                className={`w-full text-left p-4 border-b hover:bg-muted/50 transition-colors ${selectedUser?.userId === conv.userId ? 'bg-primary/5 border-l-2 border-l-primary' : ''}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm truncate">{conv.userName}</p>
+                    <p className="text-xs text-muted-foreground">{typeLabel[conv.userType] || conv.userType}</p>
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">{conv.lastMessage}</p>
+                    <ResponseTimers conv={conv} />
                   </div>
-                </button>
-              ))
-            )}
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <p className="text-[10px] text-muted-foreground">{formatTime(conv.lastMessageAt)}</p>
+                    {conv.unread > 0 && (
+                      <span className="bg-primary text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                        {conv.unread}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Área de mensagens */}
-        <div className={`${selectedUser ? 'flex' : 'hidden md:flex'} flex-col flex-1`}>
+        <div className={`${selectedUser ? 'flex' : 'hidden md:flex'} flex-col flex-1 min-w-0`}>
           {!selectedUser ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground">
               <div className="text-center">
@@ -198,7 +247,6 @@ export function SuporteTab() {
             </div>
           ) : (
             <>
-              {/* Header da conversa */}
               <div className="px-4 py-3 border-b bg-muted/40 flex items-center gap-3">
                 <button onClick={() => setSelectedUser(null)} className="md:hidden text-muted-foreground hover:text-foreground">
                   <ArrowLeft className="h-4 w-4" />
@@ -212,10 +260,63 @@ export function SuporteTab() {
                 </Badge>
               </div>
 
-              {/* Mensagens */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/10">
-                {messages.map(msg => (
-                  <div key={msg.id} className={`flex ${msg.senderType === 'admin' ? 'justify-end' : 'justify-start'}`}>
+              <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-muted/10">
+                {/* Mensagens fixadas */}
+                {pinnedMessages.length > 0 && (
+                  <div className="mb-3 space-y-2">
+                    <div className="flex items-center gap-2 text-xs text-orange-600 font-medium">
+                      <Pin className="h-3 w-3" />
+                      {pinnedMessages.length} mensagem(ns) fixada(s)
+                    </div>
+                    {pinnedMessages.map(msg => (
+                      <div key={msg.id}
+                        className="relative group border-l-2 border-orange-400 bg-orange-50 rounded-lg px-3 py-2"
+                        onMouseEnter={() => setHoveredMsg(msg.id)}
+                        onMouseLeave={() => setHoveredMsg(null)}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-orange-600 mb-0.5">
+                              📌 {msg.senderType === 'admin' ? 'Você' : selectedUser.userName}
+                            </p>
+                            {msg.content && <p className="text-sm text-gray-800 break-words">{msg.content}</p>}
+                            {msg.attachmentUrl && (
+                              <a href={msg.attachmentUrl} target="_blank" rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-xs text-primary mt-1">
+                                <FileText className="h-3 w-3" />{msg.attachmentName}
+                              </a>
+                            )}
+                          </div>
+                          {hoveredMsg === msg.id && (
+                            <button onClick={() => handlePin(msg)}
+                              className="shrink-0 p-1 rounded hover:bg-orange-100 text-orange-500 transition-colors">
+                              <PinOff className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    <div className="border-b border-dashed border-gray-200 my-2" />
+                  </div>
+                )}
+
+                {/* Mensagens regulares */}
+                {regularMessages.map(msg => (
+                  <div key={msg.id}
+                    className={`flex ${msg.senderType === 'admin' ? 'justify-end' : 'justify-start'} group`}
+                    onMouseEnter={() => setHoveredMsg(msg.id)}
+                    onMouseLeave={() => setHoveredMsg(null)}>
+
+                    {/* Botão de fixar — aparece ao hover */}
+                    <div className={`flex items-center gap-1 ${msg.senderType === 'admin' ? 'order-first mr-1' : 'order-last ml-1'}`}>
+                      {hoveredMsg === msg.id && (
+                        <button onClick={() => handlePin(msg)}
+                          title="Fixar mensagem"
+                          className="p-1 rounded-full bg-white border shadow-sm text-gray-400 hover:text-orange-500 hover:border-orange-300 transition-colors">
+                          <Pin className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+
                     <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
                       msg.senderType === 'admin'
                         ? 'bg-primary text-white rounded-br-sm'
@@ -250,21 +351,15 @@ export function SuporteTab() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input de resposta */}
               <form onSubmit={handleSend} className="p-3 border-t bg-white">
                 <div className="flex gap-2">
                   <button type="button" onClick={() => fileInputRef.current?.click()}
                     disabled={uploading} className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors disabled:opacity-50">
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
                   </button>
-                  <Input
-                    value={reply}
-                    onChange={e => setReply(e.target.value)}
+                  <Input value={reply} onChange={e => setReply(e.target.value)}
                     placeholder={`Responder para ${selectedUser.userName}...`}
-                    disabled={sending || uploading}
-                    className="flex-1 rounded-xl text-sm"
-                    autoFocus
-                  />
+                    disabled={sending || uploading} className="flex-1 rounded-xl text-sm" autoFocus />
                   <Button type="submit" disabled={!reply.trim() || sending || uploading} size="icon" className="rounded-xl shrink-0">
                     {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                   </Button>
