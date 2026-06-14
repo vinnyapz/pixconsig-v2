@@ -1,4 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 import { getServerSession } from '@/lib/auth-server';
 import fs from 'fs';
 import path from 'path';
@@ -29,8 +35,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Tipo não permitido. Use imagens, PDF ou documentos Word/Excel.' }, { status: 400 });
         }
 
-        if (file.size > 10 * 1024 * 1024) {
-            return NextResponse.json({ error: 'Arquivo muito grande. Máximo 10MB.' }, { status: 400 });
+        if (file.size > 20 * 1024 * 1024) {
+            return NextResponse.json({ error: 'Arquivo muito grande. Máximo 20MB.' }, { status: 400 });
         }
 
         if (!fs.existsSync(UPLOAD_DIR)) {
