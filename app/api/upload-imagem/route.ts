@@ -6,9 +6,6 @@ import path from 'path';
 import { randomUUID } from 'crypto';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'comunicados');
-if (!fs.existsSync(UPLOAD_DIR)) {
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-}
 
 export async function POST(request: Request) {
     try {
@@ -24,15 +21,18 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Nenhum arquivo enviado' }, { status: 400 });
         }
 
-        // Validar tipo
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
-            return NextResponse.json({ error: 'Tipo de arquivo não permitido. Use JPG, PNG, GIF ou WebP.' }, { status: 400 });
+            return NextResponse.json({ error: 'Tipo não permitido. Use JPG, PNG, GIF ou WebP.' }, { status: 400 });
         }
 
-        // Validar tamanho (5MB)
         if (file.size > 5 * 1024 * 1024) {
             return NextResponse.json({ error: 'Arquivo muito grande. Máximo 5MB.' }, { status: 400 });
+        }
+
+        // Garantir que o diretório existe
+        if (!fs.existsSync(UPLOAD_DIR)) {
+            fs.mkdirSync(UPLOAD_DIR, { recursive: true });
         }
 
         const ext = file.name.split('.').pop();
@@ -42,7 +42,9 @@ export async function POST(request: Request) {
         const buffer = Buffer.from(await file.arrayBuffer());
         fs.writeFileSync(filepath, buffer);
 
-        const url = `/uploads/comunicados/${filename}`;
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://v2.pixconsig.com.br';
+        const url = `${baseUrl}/uploads/comunicados/${filename}`;
+
         return NextResponse.json({ url });
     } catch (error) {
         console.error('Error uploading image:', error);

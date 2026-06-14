@@ -28,28 +28,41 @@ export function RichEditor({ value, onChange, placeholder }: RichEditorProps) {
         onChange(editorRef.current?.innerHTML || '');
     };
 
-    // Converte imagem para base64 e insere inline — sem upload ao servidor
-    const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Upload via servidor — retorna URL pública que funciona em emails
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
             toast.error('Tipo não permitido. Use JPG, PNG, GIF ou WebP.');
+            e.target.value = '';
             return;
         }
-        if (file.size > 2 * 1024 * 1024) {
-            toast.error('Imagem muito grande. Máximo 2MB.');
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Imagem muito grande. Máximo 5MB.');
+            e.target.value = '';
             return;
         }
 
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            const base64 = ev.target?.result as string;
-            exec('insertImage', base64);
-        };
-        reader.readAsDataURL(file);
-        e.target.value = '';
+        toast('Enviando imagem...');
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch('/api/upload-imagem', { method: 'POST', body: formData });
+            if (!res.ok) {
+                const data = await res.json();
+                toast.error(data.error || 'Erro ao enviar imagem');
+                return;
+            }
+            const { url } = await res.json();
+            exec('insertImage', url);
+        } catch {
+            toast.error('Erro ao enviar imagem');
+        } finally {
+            e.target.value = '';
+        }
     };
 
     const handleInsertUrl = () => {
